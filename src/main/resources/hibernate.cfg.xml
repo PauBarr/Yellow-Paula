@@ -1,0 +1,30 @@
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.org/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+	<session-factory>
+		<!-- Configuración de conexión a la base de datos -->
+		<property name="hibernate.connection.driver_class">
+			com.mysql.cj.jdbc.Driver</property>
+		<property name="hibernate.connection.url">
+			jdbc:mysql://localhost:3306/recetas</property>
+		<property name="hibernate.connection.username">root</property>
+		<property name="hibernate.connection.password">1234</property>
+
+		<!-- Dialecto de la base de datos -->
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+
+		<!-- Otras configuraciones -->
+		<property name="hibernate.hbm2ddl.auto">update</property> <!-- Esto
+		genera o actualiza la base de datos -->
+		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.format_sql">true</property>
+
+		<!-- Mapeo de las clases -->
+		<mapping resource="Persona.hbm.xml" />
+		<mapping resource="Ingrediente.hbm.xml" />
+		<mapping resource="Receta.hbm.xml" />
+		<mapping resource="categoria.hbm.xml" />
+		<mapping resource="RecetaIngrediente.hbm.xml" />
+
+	</session-factory>
+</hibernate-configuration>

@@ -1,0 +1,12 @@
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.org/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.yellow.Categoria" table="categoria">
+        <!-- ID de la categoría -->
+        <id name="idCategoria" column="id_categoria">
+            <generator class="identity"/>
+        </id>
+
+        <!-- Propiedad nombre de la categoría -->
+        <property name="nombreCategoria" column="nombre_categoria"/>
+    </class>
+</hibernate-mapping>
