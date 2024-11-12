@@ -1,5 +1,6 @@
 package com.yellow;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -11,29 +12,50 @@ public class Receta {
     private double costoTotal;
     private Date fechaCreacion;
     private int tiempoPreparacion;
-    private List<Ingrediente> ingredientes;
-    private List<Categoria> categorias;
-    private String nombreReceta;
-    private List<RecetaIngrediente> recetaIngredientes; // Relación con la tabla intermedia
+    private List<Ingrediente> ingredientes = new ArrayList<>();
+    private List<Categoria> categorias = new ArrayList<>();
 
-    // Constructor con todos los atributos
-    public Receta(int id, String nombre, String descripcion, double costoTotal, Date fechaCreacion, 
-                  int tiempoPreparacion, List<Ingrediente> ingredientes, List<Categoria> categorias) {
-        this.id = id;
+    public Receta() {}
+
+    public Receta(String nombre, String descripcion) {
         this.nombre = nombre;
         this.descripcion = descripcion;
-        this.costoTotal = costoTotal;
-        this.fechaCreacion = fechaCreacion;
-        this.tiempoPreparacion = tiempoPreparacion;
-        this.ingredientes = ingredientes;
-        this.categorias = categorias;
+        this.costoTotal = 0.0;
+        this.fechaCreacion = new Date();
+        this.tiempoPreparacion = 0;
     }
 
-    public Receta(double parseDouble, double parseDouble2, double parseDouble3, double parseDouble4) {
-		// TODO Auto-generated constructor stub
-	}
+    public String getProducto() {
+        return ingredientes.isEmpty() ? null : ingredientes.get(0).getNombre();
+    }
 
-	// Getters y Setters
+    public String getTipoPesoLt() {
+        return ingredientes.isEmpty() ? null : ingredientes.get(0).getTipoPesoLt();
+    }
+
+    public double getPesoLtR() {
+        return ingredientes.isEmpty() ? 0.0 : ingredientes.get(0).getPesoLtR();
+    }
+
+    public double getCostoUnitario() {
+        return ingredientes.isEmpty() ? 0.0 : ingredientes.get(0).getCostoUnitario();
+    }
+
+    public double getCantidadUtilizada() {
+        return ingredientes.isEmpty() ? 0.0 : ingredientes.get(0).getCantidadUtilizada();
+    }
+
+    public double getCostoReal() {
+        return ingredientes.isEmpty() ? 0.0 : ingredientes.get(0).getCostoReal();
+    }
+
+    public void calcularCostoTotal() {
+        this.costoTotal = ingredientes.stream()
+            .mapToDouble(Ingrediente::getCostoReal)
+            .sum();
+    }
+
+
     public int getId() {
         return id;
     }
@@ -81,14 +103,6 @@ public class Receta {
     public void setTiempoPreparacion(int tiempoPreparacion) {
         this.tiempoPreparacion = tiempoPreparacion;
     }
-    public String getNombreReceta() {
-        return nombreReceta;
-    }
-
-    public void setNombreReceta(String nombreReceta) {
-        this.nombreReceta = nombreReceta;
-    }
-       
 
     public List<Ingrediente> getIngredientes() {
         return ingredientes;
@@ -105,11 +119,19 @@ public class Receta {
     public void setCategorias(List<Categoria> categorias) {
         this.categorias = categorias;
     }
-    public List<RecetaIngrediente> getRecetaIngredientes() {
-        return recetaIngredientes;
-    }
 
-    public void setRecetaIngredientes(List<RecetaIngrediente> recetaIngredientes) {
-        this.recetaIngredientes = recetaIngredientes;
+public void mostrarDetallesIngredientes() {
+    for (Ingrediente ingrediente : ingredientes) {
+        System.out.println("Producto: " + ingrediente.getNombre());
+        System.out.println("Tipo de Peso: " + ingrediente.getTipoPesoLt());
+        System.out.println("Peso/Litro Real: " + ingrediente.getPesoLtR());
+        System.out.println("Costo Unitario: " + ingrediente.getCostoUnitario());
+        System.out.println("Cantidad Utilizada: " + ingrediente.getCantidadUtilizada());
+        System.out.println("Costo Real: " + ingrediente.getCostoReal());
+        System.out.println("-----------------------------");
+
     }
 }
+}
+
+

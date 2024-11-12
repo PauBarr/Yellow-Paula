@@ -10,6 +10,9 @@ public class Categoria {
 		this.nombreCategoria = nombreCategoria;
 	}
 
+	public Categoria() {
+	}
+
 	// Getters y setters
 	public int getIdCategoria() {
 		return idCategoria;

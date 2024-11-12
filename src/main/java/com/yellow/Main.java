@@ -12,17 +12,25 @@ public class Main {
     // Bloque estático para inicializar la SessionFactory una vez al cargar la clase
     static {
         try {
-            factory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+            // Configura el SessionFactory y agrega la clase Ingrediente explícitamente
+            factory = new Configuration()
+                .configure("hibernate.cfg.xml")
+                .addAnnotatedClass(Ingrediente.class)
+                .buildSessionFactory();
         } catch (Throwable ex) {
             System.err.println("Error al inicializar SessionFactory: " + ex);
             throw new ExceptionInInitializerError(ex);
         }
+
+        // Agregar un shutdown hook para cerrar el factory al finalizar la aplicación
+        Runtime.getRuntime().addShutdownHook(new Thread(Main::cerrarFactory));
     }
+
 
     public static void main(String[] args) {
         // Mostrar la pantalla principal usando Swing
         SwingUtilities.invokeLater(() -> {
-            PantallaPrincipal pantalla = new PantallaPrincipal();
+            PantallaPrincipal pantalla = new PantallaPrincipal(factory);  // Pasa el SessionFactory a PantallaPrincipal
             pantalla.setVisible(true);
         });
     }
@@ -34,18 +42,41 @@ public class Main {
 
     // Método para guardar ingredientes en la base de datos
     public static void guardarIngrediente(Ingrediente ingrediente) {
-        Session session = factory.openSession();
+        Session session = null;
         try {
+            session = factory.openSession();
             session.beginTransaction();
             session.save(ingrediente);  // Guardar el ingrediente
             session.getTransaction().commit();
         } catch (Exception e) {
-            if (session.getTransaction() != null) {
+            if (session != null && session.getTransaction() != null) {
                 session.getTransaction().rollback();  // Revertir en caso de error
             }
             e.printStackTrace();
         } finally {
-            session.close();  // Cerrar la sesión
+            if (session != null) {
+                session.close();  // Asegurar cierre de la sesión
+            }
+        }
+    }
+
+    // Método para guardar recetas en la base de datos
+    public static void guardarReceta(Receta nuevaReceta) {
+        Session session = null;
+        try {
+            session = factory.openSession();
+            session.beginTransaction();
+            session.save(nuevaReceta);  // Guardar la receta
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            if (session != null && session.getTransaction() != null) {
+                session.getTransaction().rollback();  // Revertir en caso de error
+            }
+            e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();  // Cerrar la sesión
+            }
         }
     }
 
@@ -54,10 +85,5 @@ public class Main {
         if (factory != null) {
             factory.close();
         }
-    }
-
-    // Método para guardar recetas en la base de datos (puedes implementar la lógica)
-    public static void guardarReceta(Receta nuevaReceta) {
-        // Implementa la lógica para guardar una receta
     }
 }
