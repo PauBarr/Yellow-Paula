@@ -15,42 +15,41 @@ package com.yellow;
 
          setTitle("Gestión de Recetas");
          setSize(400, 300);
-         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Cambiado a DISPOSE_ON_CLOSE para que solo cierre esta ventana
          setLocationRelativeTo(null);
 
          // Crear botones
          JButton btnNuevaReceta = new JButton("Nueva receta");
-         // ¡Hemos quitado el botón btnActualizarReceta!
-         JButton btnRecetas = new JButton("Ver / Actualizar Recetas"); // Cambiado el texto para que quede claro que desde aquí se actualiza
+         JButton btnRecetas = new JButton("Ver / Actualizar Recetas");
          JButton btnRegresar = new JButton("Regresar");
 
          // Asignar acciones a los botones
-         btnNuevaReceta.addActionListener(new ActionListener() {
-             public void actionPerformed(ActionEvent e) {
-                 nuevaReceta();
+         btnNuevaReceta.addActionListener(new ActionListener() { //
+             public void actionPerformed(ActionEvent e) { //
+                 nuevaReceta(); //
              }
          });
 
-         btnRecetas.addActionListener(new ActionListener() {
-             public void actionPerformed(ActionEvent e) {
-                 mostrarYActualizarRecetas(); // Nueva acción para este botón
+         btnRecetas.addActionListener(new ActionListener() { //
+             public void actionPerformed(ActionEvent e) { //
+                 mostrarYActualizarRecetas(); //
              }
          });
 
-         btnRegresar.addActionListener(new ActionListener() {
-             public void actionPerformed(ActionEvent e) {
-                 regresarAPantallaPrincipal();
+         btnRegresar.addActionListener(new ActionListener() { //
+             public void actionPerformed(ActionEvent e) { //
+                 regresarAPantallaPrincipal(); //
              }
          });
 
          // Crear el panel y agregar los botones
          JPanel panel = new JPanel();
-         panel.setLayout(new GridLayout(3, 1, 10, 10)); // Ahora son 3 filas porque quitamos un botón
-         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+         panel.setLayout(new GridLayout(3, 1, 10, 10)); //
+         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); //
 
          // Añadir los botones al panel
          panel.add(btnNuevaReceta);
-         panel.add(btnRecetas); // El botón que ahora gestiona la visualización y actualización
+         panel.add(btnRecetas);
          panel.add(btnRegresar);
 
          // Añadir el panel a la ventana
@@ -60,25 +59,21 @@ package com.yellow;
      }
 
      private void nuevaReceta() {
-         this.dispose();
-         PantallaCostos ventana = new PantallaCostos(sessionFactory);
-         ventana.setVisible(true);
+         this.dispose(); //
+         PantallaCostos ventana = new PantallaCostos(sessionFactory); //
+         ventana.setVisible(true); //
      }
 
-     // Este método reemplaza a "actualizarReceta" y "mostrarRecetas"
+     // Este método es el que se modifica para abrir VisualizarRecetas
      private void mostrarYActualizarRecetas() {
-         JOptionPane.showMessageDialog(this, "Abriendo pantalla para ver y actualizar recetas...");
-         // Aquí deberías abrir una nueva ventana con un JTable similar a VisualizarIngredientes,
-         // donde se listen las recetas y haya opciones para editar o eliminar cada una.
-         // Por ejemplo:
-         // this.dispose(); // Oculta la ventana actual
-         // VisualizarRecetas ventanaRecetas = new VisualizarRecetas(this, sessionFactory);
-         // ventanaRecetas.setVisible(true);
+         this.dispose(); // Oculta la ventana actual (IngresoReceta)
+         VisualizarRecetas visualizarRecetas = new VisualizarRecetas(this, sessionFactory); // Crea una instancia de VisualizarRecetas
+         visualizarRecetas.setVisible(true); // Hace visible la ventana de VisualizarRecetas
      }
 
      private void regresarAPantallaPrincipal() {
-         this.dispose();
-         PantallaPrincipal pantallaPrincipal = new PantallaPrincipal(sessionFactory);
-         pantallaPrincipal.setVisible(true);
+         this.dispose(); //
+         PantallaPrincipal pantallaPrincipal = new PantallaPrincipal(sessionFactory); //
+         pantallaPrincipal.setVisible(true); //
      }
  }
