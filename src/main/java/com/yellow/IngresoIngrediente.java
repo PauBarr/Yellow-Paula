@@ -12,17 +12,17 @@ package com.yellow;
  public class IngresoIngrediente extends JFrame {
 
      private JTextField articuloField;
-     private JRadioButton unidadRadio;
+     private JRadioButton unidadRadio; // Representará la unidad en la que se compró
      private JRadioButton litrosRadio;
      private JRadioButton kilogramosRadio;
-     private JRadioButton especialRadio;
-     private JTextField cantidadField;
-     private JTextField precioField;
+     private JRadioButton especialRadio; // Podría ser "Otros" o algo más genérico
+     private JTextField cantidadDeCompraField; // Nuevo: Cantidad total del paquete/unidad
+     private JTextField costoDeCompraField; // Nuevo: Costo total del paquete/unidad
 
      private JButton ingresarButton;
      private JButton salirButton;
      private JButton limpiarButton;
-     private JButton verIngredientesButton; // ¡Este es el nuevo botón!
+     private JButton verIngredientesButton;
 
      private JComboBox<Ingrediente> selectorIngrediente;
      private Ingrediente ingredienteActual;
@@ -63,8 +63,8 @@ package com.yellow;
          articuloField = new JTextField();
          articuloField.setBounds(180, 90, 200, 25);
 
-         JLabel unidadLabel = new JLabel("Unidad:");
-         unidadLabel.setBounds(20, 130, 100, 25);
+         JLabel unidadLabel = new JLabel("Unidad de Compra:"); // Texto actualizado
+         unidadLabel.setBounds(20, 130, 150, 25); // Ampliado el espacio para el label
 
          unidadRadio = new JRadioButton("Unidad");
          unidadRadio.setBounds(40, 160, 100, 25);
@@ -72,8 +72,8 @@ package com.yellow;
          litrosRadio.setBounds(40, 190, 100, 25);
          kilogramosRadio = new JRadioButton("Kilogramos");
          kilogramosRadio.setBounds(40, 220, 100, 25);
-         especialRadio = new JRadioButton("Especial");
-         especialRadio.setBounds(40, 250, 100, 25);
+         especialRadio = new JRadioButton("Especial/Otros"); // Texto actualizado
+         especialRadio.setBounds(40, 250, 120, 25); // Ampliado el espacio
 
          unidadGroup = new ButtonGroup();
          unidadGroup.add(unidadRadio);
@@ -81,15 +81,17 @@ package com.yellow;
          unidadGroup.add(kilogramosRadio);
          unidadGroup.add(especialRadio);
 
-         JLabel cantidadLabel = new JLabel("Cantidad (Peso/Lt R):");
-         cantidadLabel.setBounds(150, 160, 150, 25);
-         cantidadField = new JTextField();
-         cantidadField.setBounds(300, 160, 100, 25);
+         // NUEVO: Cantidad de compra (ej. 1000 para 1kg, 1 para 1 banana)
+         JLabel cantidadDeCompraLabel = new JLabel("Cantidad de Compra:");
+         cantidadDeCompraLabel.setBounds(180, 160, 150, 25);
+         cantidadDeCompraField = new JTextField();
+         cantidadDeCompraField.setBounds(330, 160, 80, 25); // Ajustado el ancho
 
-         JLabel precioLabel = new JLabel("Costo Unitario:");
-         precioLabel.setBounds(150, 200, 150, 25);
-         precioField = new JTextField();
-         precioField.setBounds(300, 200, 100, 25);
+         // NUEVO: Costo de compra (ej. 5600 por el paquete, 200 por la banana)
+         JLabel costoDeCompraLabel = new JLabel("Costo Total de Compra:");
+         costoDeCompraLabel.setBounds(180, 200, 150, 25);
+         costoDeCompraField = new JTextField();
+         costoDeCompraField.setBounds(330, 200, 80, 25); // Ajustado el ancho
 
          ingresarButton = new JButton("GUARDAR / ACTUALIZAR");
          ingresarButton.setBounds(20, 300, 200, 35);
@@ -100,14 +102,13 @@ package com.yellow;
          salirButton = new JButton("SALIR");
          salirButton.setBounds(20, 350, 150, 35);
 
-         // Definimos el nuevo botón y su posición
          verIngredientesButton = new JButton("VER INGREDIENTES");
-         verIngredientesButton.setBounds(180, 350, 230, 35); // Lo coloqué al lado del botón SALIR
+         verIngredientesButton.setBounds(180, 350, 230, 35);
 
          ingresarButton.addActionListener(e -> guardarOActualizarIngrediente());
          limpiarButton.addActionListener(e -> limpiarCampos());
          salirButton.addActionListener(e -> salir());
-         verIngredientesButton.addActionListener(e -> verIngredientes()); // ¡Nueva acción para el botón!
+         verIngredientesButton.addActionListener(e -> verIngredientes());
 
          add(articuloLabel);
          add(articuloField);
@@ -116,14 +117,14 @@ package com.yellow;
          add(litrosRadio);
          add(kilogramosRadio);
          add(especialRadio);
-         add(cantidadLabel);
-         add(cantidadField);
-         add(precioLabel);
-         add(precioField);
+         add(cantidadDeCompraLabel); // Agregado
+         add(cantidadDeCompraField); // Agregado
+         add(costoDeCompraLabel); // Agregado
+         add(costoDeCompraField); // Agregado
          add(ingresarButton);
          add(limpiarButton);
          add(salirButton);
-         add(verIngredientesButton); // ¡Añadimos el nuevo botón a la ventana!
+         add(verIngredientesButton);
      }
 
      private void cargarIngredientesEnSelector() {
@@ -144,8 +145,10 @@ package com.yellow;
          ingredienteActual = (Ingrediente) selectorIngrediente.getSelectedItem();
          if (ingredienteActual != null) {
              articuloField.setText(ingredienteActual.getNombre());
-             cantidadField.setText(String.valueOf(ingredienteActual.getPesoLtR()));
-             precioField.setText(String.valueOf(ingredienteActual.getCostoUnitario()));
+             // Aquí pueden ser null si los datos viejos no tienen valor para estas nuevas columnas
+             // Hay que usar String.valueOf() que maneja nulls o asegurar que los getters devuelvan 0.0
+             cantidadDeCompraField.setText(String.valueOf(ingredienteActual.getCantidadDeCompra())); //
+             costoDeCompraField.setText(String.valueOf(ingredienteActual.getCostoDeCompra())); //
 
              unidadGroup.clearSelection();
              String tipo = ingredienteActual.getTipoPesoLt();
@@ -155,7 +158,7 @@ package com.yellow;
                  litrosRadio.setSelected(true);
              } else if ("Kilogramos".equals(tipo)) {
                  kilogramosRadio.setSelected(true);
-             } else if ("Especial".equals(tipo)) {
+             } else if ("Especial/Otros".equals(tipo) || "Especial".equals(tipo)) {
                  especialRadio.setSelected(true);
              }
          } else {
@@ -166,17 +169,17 @@ package com.yellow;
      private void guardarOActualizarIngrediente() {
          String producto = articuloField.getText();
          String tipo = getTipoSeleccionado();
-         String precioText = precioField.getText();
-         String cantidadText = cantidadField.getText();
+         String costoDeCompraText = costoDeCompraField.getText(); // Nuevo
+         String cantidadDeCompraText = cantidadDeCompraField.getText(); // Nuevo
 
-         if (producto.isEmpty() || tipo == null || precioText.isEmpty() || cantidadText.isEmpty()) {
-             JOptionPane.showMessageDialog(this, "Todos los campos (Artículo, Unidad, Cantidad, Precio) son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
+         if (producto.isEmpty() || tipo == null || costoDeCompraText.isEmpty() || cantidadDeCompraText.isEmpty()) {
+             JOptionPane.showMessageDialog(this, "Todos los campos (Artículo, Unidad, Cantidad de Compra, Costo de Compra) son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
              return;
          }
 
          try {
-             double precio = Double.parseDouble(precioText);
-             double cantidad = Double.parseDouble(cantidadText);
+             double costoDeCompra = parsearNumero(costoDeCompraText); // Usar la función robusta
+             double cantidadDeCompra = parsearNumero(cantidadDeCompraText); // Usar la función robusta
 
              Session session = null;
              Transaction transaction = null;
@@ -185,14 +188,15 @@ package com.yellow;
                  transaction = session.beginTransaction();
 
                  if (ingredienteActual == null) {
-                     Ingrediente nuevoIngrediente = new Ingrediente(producto, tipo, cantidad, precio, 0.0);
+                     // Constructor actualizado
+                     Ingrediente nuevoIngrediente = new Ingrediente(producto, tipo, cantidadDeCompra, costoDeCompra);
                      session.save(nuevoIngrediente);
                      JOptionPane.showMessageDialog(this, "Nuevo ingrediente ingresado exitosamente.");
                  } else {
                      ingredienteActual.setNombre(producto);
                      ingredienteActual.setTipoPesoLt(tipo);
-                     ingredienteActual.setPesoLtR(cantidad);
-                     ingredienteActual.setCostoUnitario(precio);
+                     ingredienteActual.setCantidadDeCompra(cantidadDeCompra); // Cambiado
+                     ingredienteActual.setCostoDeCompra(costoDeCompra); // Cambiado
 
                      session.merge(ingredienteActual);
                      JOptionPane.showMessageDialog(this, "Ingrediente actualizado exitosamente.");
@@ -215,14 +219,14 @@ package com.yellow;
              }
 
          } catch (NumberFormatException ex) {
-             JOptionPane.showMessageDialog(this, "Cantidad y Costo Unitario deben ser valores numéricos válidos.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+             JOptionPane.showMessageDialog(this, "Cantidad de Compra y Costo de Compra deben ser valores numéricos válidos.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
          }
      }
 
      private void limpiarCampos() {
          articuloField.setText("");
-         cantidadField.setText("");
-         precioField.setText("");
+         cantidadDeCompraField.setText(""); // Cambiado
+         costoDeCompraField.setText(""); // Cambiado
          unidadGroup.clearSelection();
          selectorIngrediente.setSelectedItem(null);
          ingredienteActual = null;
@@ -236,17 +240,37 @@ package com.yellow;
          } else if (kilogramosRadio.isSelected()) {
              return "Kilogramos";
          } else if (especialRadio.isSelected()) {
-             return "Especial";
+             return "Especial/Otros"; // Cambiado
          }
          return null;
      }
 
-     // Método para abrir la nueva ventana de VisualizarIngredientes
+     // Método robusto para parsear números (copiado de PantallaCostos)
+     private double parsearNumero(String text) {
+         if (text == null || text.trim().isEmpty() || text.trim().equals("-")) {
+             return 0.0;
+         }
+         String cleanedText = text.trim().replaceAll("[^\\d\\.,-]", "");
+         
+         if (cleanedText.contains(".") && cleanedText.contains(",")) {
+             cleanedText = cleanedText.replace(".", ""); 
+             cleanedText = cleanedText.replace(",", ".");
+         } else if (cleanedText.contains(",")) {
+             cleanedText = cleanedText.replace(",", ".");
+         }
+         
+         try {
+             return Double.parseDouble(cleanedText);
+         } catch (NumberFormatException e) {
+             System.err.println("Error al parsear el número '" + text + "' después de limpiar. Se devolverá 0.0. Limpiado a: '" + cleanedText + "'");
+             return 0.0;
+         }
+     }
+
      private void verIngredientes() {
-         this.setVisible(false); // Oculta la ventana actual (IngresoIngrediente)
-         // Creamos la nueva ventana, pasándole la ventana actual y la sessionFactory
+         this.setVisible(false);
          VisualizarIngredientes visualizarIngredientes = new VisualizarIngredientes(this, sessionFactory);
-         visualizarIngredientes.setVisible(true); // Hacemos visible la nueva ventana
+         visualizarIngredientes.setVisible(true);
      }
 
      private void salir() {

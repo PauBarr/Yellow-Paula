@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Locale; 
+import java.util.Locale;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.util.Date;
@@ -36,11 +36,12 @@ public class PantallaCostos extends JFrame {
     private static final long serialVersionUID = 1L;
     private SessionFactory sessionFactory;
     private JTable tablaIngredientes;
-    private JComboBox<Ingrediente> comboBoxIngredientes;
+    private JComboBox<Ingrediente> comboBoxIngredientes; // Combo para seleccionar productos
+    private JComboBox<String> comboBoxUnidades; // Combo para seleccionar unidades de uso (gramos, unidades, ml, etc.)
     private JLabel labelCostoTotal, labelGastosExtra, labelPrecioFinal;
     private JTextField txtCostoTotal, txtGastosExtra, txtPrecioFinal;
     private JButton btnImprimirPlanilla;
-    
+
     private Map<String, Ingrediente> ingredientesMap;
 
     public PantallaCostos(SessionFactory sessionFactory) {
@@ -64,48 +65,76 @@ public class PantallaCostos extends JFrame {
         labelTitulo.setForeground(new Color(85, 107, 47));
         panelSuperior.add(labelTitulo);
 
-        String[] columnNames = {"PRODUCTO", "TIPO PESO/LT", "PESO/LT R", "COSTO UNIT.", "CANT. UTILIZADA", "COSTO REAL"};
-        
+        // Columnas de la tabla actualizadas
+        // "PRODUCTO" (Selección de Ingrediente)
+        // "TIPO COMPRA" (ej. "kg", "unidad") - Mostrar la unidad de compra del ingrediente
+        // "CANTIDAD COMPRA" (ej. 1000g para 1kg, 1 para 1 unidad) - La cantidad total que viene en el paquete/unidad comprada
+        // "COSTO COMPRA" (ej. $5600 por el paquete, $200 por la banana) - El costo total de ese paquete/unidad
+        // "CANT. UTILIZADA" (Cuanto se usa de la compra, ej. 200g, 1 unidad) - Editable
+        // "UNIDAD UTILIZADA" (Unidad de la Cant. Utilizada, ej. "gramos", "unidades") - Editable
+        // "COSTO REAL" (Calculado: (Costo Compra / Cantidad Compra) * Cant. Utilizada)
+        String[] columnNames = {"PRODUCTO", "TIPO COMPRA", "CANTIDAD COMPRA", "COSTO COMPRA", "CANT. UTILIZADA", "UNIDAD UTILIZADA", "COSTO REAL"};
+
         DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 0 || column == 4;
+                // Solo editable el producto, cantidad utilizada y unidad utilizada
+                return column == 0 || column == 4 || column == 5;
             }
-        }; 
-        
+        };
+
         tablaIngredientes = new JTable(model);
 
+        // Editor para la columna "PRODUCTO"
         comboBoxIngredientes = new JComboBox<>();
         tablaIngredientes.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(comboBoxIngredientes));
+
+        // Editor para la columna "UNIDAD UTILIZADA"
+        comboBoxUnidades = new JComboBox<>(new String[]{"gramos", "mililitros", "unidades", "litros", "kilogramos", "cucharadas", "pizcas", "otros"});
+        tablaIngredientes.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(comboBoxUnidades));
+
 
         comboBoxIngredientes.addActionListener(e -> {
             int row = tablaIngredientes.getSelectedRow();
             if (row >= 0) {
                 Ingrediente selectedIngrediente = (Ingrediente) comboBoxIngredientes.getSelectedItem();
                 if (selectedIngrediente != null) {
-                    model.setValueAt(selectedIngrediente.getTipoPesoLt(), row, 1);
-                    model.setValueAt(selectedIngrediente.getPesoLtR(), row, 2);
-                    model.setValueAt(selectedIngrediente.getCostoUnitario(), row, 3);
-                    
+                    // Actualizar las columnas con los datos del ingrediente seleccionado
+                    model.setValueAt(selectedIngrediente.getTipoPesoLt(), row, 1); // TIPO COMPRA
+                    model.setValueAt(selectedIngrediente.getCantidadDeCompra(), row, 2); // CANTIDAD COMPRA
+                    model.setValueAt(selectedIngrediente.getCostoDeCompra(), row, 3); // COSTO COMPRA
+
+                    // Asegurar que Cant. Utilizada y Unidad Utilizada tengan valores iniciales
                     Object currentCantidad = model.getValueAt(row, 4);
                     if (currentCantidad == null || currentCantidad.toString().isEmpty()) {
-                        model.setValueAt(0.0, row, 4); 
+                        model.setValueAt(0.0, row, 4);
+                    }
+                    Object currentUnidadU = model.getValueAt(row, 5);
+                    if (currentUnidadU == null || currentUnidadU.toString().isEmpty()) {
+                         // Intentar inicializar con la unidad de compra, si es una de las opciones de uso
+                        String tipoCompra = selectedIngrediente.getTipoPesoLt();
+                        if (java.util.Arrays.asList("gramos", "mililitros", "unidades", "litros", "kilogramos", "cucharadas", "pizcas", "otros").contains(tipoCompra)) {
+                             model.setValueAt(tipoCompra, row, 5);
+                        } else {
+                            model.setValueAt("unidades", row, 5); // Valor por defecto
+                        }
                     }
                     actualizarCostoReal(row);
                     actualizarCostoTotal();
                 }
             }
         });
-        
+
         model.addTableModelListener(e -> {
             if (e.getType() == TableModelEvent.UPDATE) {
                 int row = e.getFirstRow();
                 int column = e.getColumn();
 
-                if (column == 4 || column == 3) {
+                // Recalcular si cambia la cantidad utilizada (columna 4) o si el ingrediente cambia (columna 0)
+                if (column == 4 || column == 0) {
                     actualizarCostoReal(row);
                     actualizarCostoTotal();
-                } 
+                }
             }
         });
 
@@ -115,13 +144,13 @@ public class PantallaCostos extends JFrame {
         panelInferior.setLayout(new BoxLayout(panelInferior, BoxLayout.Y_AXIS));
 
         JPanel panelCostos = new JPanel();
-        panelCostos.setLayout(new GridLayout(2, 2, 10, 10));
+        panelCostos.setLayout(new GridLayout(3, 2, 10, 10)); // Cambiado a 3 filas para el Precio Final
 
-        labelCostoTotal = new JLabel("COSTO TOTAL POR PRODUCTO  $");
+        labelCostoTotal = new JLabel("COSTO TOTAL DE INGREDIENTES  $"); // Texto actualizado
         txtCostoTotal = new JTextField("-");
         labelGastosExtra = new JLabel("GASTOS EXTRA  $");
-        txtGastosExtra = new JTextField("0.0"); 
-        labelPrecioFinal = new JLabel("PRECIO FINAL  $");
+        txtGastosExtra = new JTextField("0.0");
+        labelPrecioFinal = new JLabel("PRECIO FINAL ESTIMADO  $"); // Texto actualizado
         labelPrecioFinal.setForeground(Color.RED);
         txtPrecioFinal = new JTextField("-");
 
@@ -148,8 +177,8 @@ public class PantallaCostos extends JFrame {
         btnImprimirPlanilla = new JButton("IMPRIMIR PLANILLA");
         btnImprimirPlanilla.addActionListener(e -> imprimirPlanilla());
         panelBotonesInferior.add(btnImprimirPlanilla);
-        
-        JButton btnEliminarIngredienteTabla = new JButton("ELIMINAR INGREDIENTE");
+
+        JButton btnEliminarIngredienteTabla = new JButton("ELIMINAR FILA"); // Texto actualizado
         btnEliminarIngredienteTabla.addActionListener(e -> eliminarIngredienteDeTabla());
         panelBotonesInferior.add(btnEliminarIngredienteTabla);
 
@@ -175,17 +204,17 @@ public class PantallaCostos extends JFrame {
 
         add(panelPrincipal);
 
-        agregarDocumentListener(txtGastosExtra); 
-        
-        actualizarPrecioFinal(); 
-        agregarFilaATabla(); 
+        agregarDocumentListener(txtGastosExtra);
+
+        actualizarPrecioFinal();
+        agregarFilaATabla();
     }
-    
+
     private void agregarDocumentListener(JTextField textField) {
         textField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                actualizarPrecioFinal(); 
+                actualizarPrecioFinal();
             }
 
             @Override
@@ -200,29 +229,19 @@ public class PantallaCostos extends JFrame {
         });
     }
 
-    // *** NUEVA FUNCIÓN AUXILIAR PARA PARSEAR NÚMEROS DE FORMA ROBUSTA ***
+    // Método para parsear números (ya existente y robusto)
     private double parsearNumero(String text) {
         if (text == null || text.trim().isEmpty() || text.trim().equals("-")) {
             return 0.0;
         }
-        // Limpiar el string:
-        // 1. Eliminar símbolos de moneda y otros caracteres no numéricos (excepto . y ,)
-        String cleanedText = text.trim().replaceAll("[^\\d\\.,-]", ""); // Mantiene dígitos, punto, coma y guion (para negativos)
-        
-        // 2. Determinar si la coma es separador decimal o de miles.
-        // Heurística simple: Si hay un punto Y una coma, la coma es decimal (ej. 1.234,56).
-        // Si solo hay una coma, la coma es decimal (ej. 123,45).
-        // Si solo hay un punto, el punto es decimal (ej. 123.45).
-        
+        String cleanedText = text.trim().replaceAll("[^\\d\\.,-]", "");
+
         if (cleanedText.contains(".") && cleanedText.contains(",")) {
-            // Ejemplo: 1.234,56 -> 1234.56
-            cleanedText = cleanedText.replace(".", ""); // Elimina el separador de miles (punto)
-            cleanedText = cleanedText.replace(",", "."); // Reemplaza la coma decimal por punto
+            cleanedText = cleanedText.replace(".", "");
+            cleanedText = cleanedText.replace(",", ".");
         } else if (cleanedText.contains(",")) {
-            // Ejemplo: 123,45 -> 123.45 (coma es decimal)
-            cleanedText = cleanedText.replace(",", "."); // Reemplaza la coma decimal por punto
+            cleanedText = cleanedText.replace(",", ".");
         }
-        // Si solo hay punto, ya está bien para Double.parseDouble (ej. 123.45)
 
         try {
             return Double.parseDouble(cleanedText);
@@ -231,7 +250,6 @@ public class PantallaCostos extends JFrame {
             return 0.0;
         }
     }
-
 
     private void regresarAPantallaPrincipal() {
         this.dispose();
@@ -254,27 +272,33 @@ public class PantallaCostos extends JFrame {
 
     private void actualizarCostoReal(int row) {
         try {
-            Object cantidadObj = tablaIngredientes.getValueAt(row, 4);
-            Object costoUnitarioObj = tablaIngredientes.getValueAt(row, 3);
+            Object productoObj = tablaIngredientes.getValueAt(row, 0); // Producto (Ingrediente)
+            Object cantidadUtilizadaObj = tablaIngredientes.getValueAt(row, 4); // CANT. UTILIZADA
 
-            double cantidad = 0.0;
-            double costoUnitario = 0.0;
-
-            if (cantidadObj != null && !cantidadObj.toString().trim().isEmpty()) {
-                // Usar la función robusta para parsear
-                cantidad = parsearNumero(cantidadObj.toString());
+            if (productoObj == null || !(productoObj instanceof Ingrediente)) {
+                tablaIngredientes.setValueAt("-", row, 6); // Columna "COSTO REAL"
+                return;
             }
 
-            if (costoUnitarioObj != null && !costoUnitarioObj.toString().trim().isEmpty()) {
-                // Usar la función robusta para parsear
-                costoUnitario = parsearNumero(costoUnitarioObj.toString());
+            Ingrediente ingrediente = (Ingrediente) productoObj;
+
+            double cantidadUtilizada = 0.0;
+            if (cantidadUtilizadaObj != null && !cantidadUtilizadaObj.toString().trim().isEmpty()) {
+                cantidadUtilizada = parsearNumero(cantidadUtilizadaObj.toString());
             }
-            
-            double costoReal = cantidad * costoUnitario;
-            tablaIngredientes.setValueAt(String.format("$%.2f", costoReal), row, 5);
-            
-        } catch (Exception e) { 
-            tablaIngredientes.setValueAt("-", row, 5);
+
+            double costoDeCompra = ingrediente.getCostoDeCompra();
+            double cantidadDeCompra = ingrediente.getCantidadDeCompra();
+
+            double costoReal = 0.0;
+            if (cantidadDeCompra > 0) { // Evitar división por cero
+                costoReal = (costoDeCompra / cantidadDeCompra) * cantidadUtilizada;
+            }
+
+            tablaIngredientes.setValueAt(String.format("$%.2f", costoReal), row, 6); // Columna "COSTO REAL"
+
+        } catch (Exception e) {
+            tablaIngredientes.setValueAt("-", row, 6); // Columna "COSTO REAL"
             System.err.println("Error inesperado al actualizar costo real en fila " + row + ": " + e.getMessage());
             e.printStackTrace();
         }
@@ -282,33 +306,27 @@ public class PantallaCostos extends JFrame {
 
     private void actualizarCostoTotal() {
         double total = 0.0;
-        // Solo para formatear la salida, no para parsear de aquí
-        NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("es", "AR")); 
+        NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("es", "AR"));
 
         for (int i = 0; i < tablaIngredientes.getRowCount(); i++) {
-            Object costoRealObj = tablaIngredientes.getValueAt(i, 5);
-            // Usar la función robusta para parsear el costo real de la tabla
+            Object costoRealObj = tablaIngredientes.getValueAt(i, 6); // Ahora es la columna 6
             total += parsearNumero(costoRealObj.toString());
         }
         txtCostoTotal.setText(format.format(total));
-        actualizarPrecioFinal(); 
+        actualizarPrecioFinal();
     }
 
     private void actualizarPrecioFinal() {
         double costoTotal = 0.0;
         double gastosExtra = 0.0;
 
-        // Se mantiene para formatear la salida
-        NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("es", "AR")); 
+        NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("es", "AR"));
 
-        // Usar la función robusta para parsear el costo total
         costoTotal = parsearNumero(txtCostoTotal.getText());
-
-        // Usar la función robusta para parsear los gastos extra
         gastosExtra = parsearNumero(txtGastosExtra.getText());
-        
+
         double precioFinal = costoTotal + gastosExtra;
-        txtPrecioFinal.setText(format.format(precioFinal)); 
+        txtPrecioFinal.setText(format.format(precioFinal));
     }
 
     private void imprimirPlanilla() {
@@ -329,8 +347,9 @@ public class PantallaCostos extends JFrame {
             float tableWidth = page.getMediaBox().getWidth() - 2 * margin;
             float rowHeight = 20;
 
-            String[] headers = {"PRODUCTO", "TIPO", "PESO/LT", "COSTO U.", "CANT. UTIL.", "COSTO REAL"};
-            float[] colWidths = {0.25f, 0.15f, 0.15f, 0.15f, 0.15f, 0.15f};
+            // Headers actualizados para el PDF
+            String[] headers = {"PRODUCTO", "TIPO COMPRA", "CANT. COMPRA", "COSTO COMPRA", "CANT. UTIL.", "UNIDAD UTIL.", "COSTO REAL"};
+            float[] colWidths = {0.20f, 0.12f, 0.12f, 0.15f, 0.12f, 0.14f, 0.15f}; // Ajustar anchos para 7 columnas
 
             float currentY = yStart;
 
@@ -344,7 +363,7 @@ public class PantallaCostos extends JFrame {
                 contentStream.endText();
                 startX += tableWidth * colWidths[i];
             }
-            
+
             contentStream.setLineWidth(1);
             contentStream.moveTo(margin, yStart - 5);
             contentStream.lineTo(margin + tableWidth, yStart - 5);
@@ -352,19 +371,29 @@ public class PantallaCostos extends JFrame {
 
 
             for (int i = 0; i < tablaIngredientes.getRowCount(); i++) {
-                Object productName = tablaIngredientes.getValueAt(i, 0);
-                if (productName == null || productName.toString().isEmpty()) {
+                Object productNameObj = tablaIngredientes.getValueAt(i, 0);
+                if (productNameObj == null || productNameObj.toString().isEmpty()) {
                     continue;
                 }
-                
+                String productName = productNameObj.toString(); // Usar toString() del Ingrediente para el nombre
+
                 startX = margin;
                 currentY -= rowHeight;
 
                 for (int j = 0; j < tablaIngredientes.getColumnCount(); j++) {
                     Object value = tablaIngredientes.getValueAt(i, j);
-                    String text = (value != null) ? value.toString() : "";
+                    String text = "";
+                    if (value instanceof Ingrediente) { // Si es el objeto Ingrediente en la primera columna
+                        text = ((Ingrediente) value).getNombre();
+                    } else {
+                        text = (value != null) ? value.toString() : "";
+                    }
+
                     contentStream.beginText();
-                    contentStream.newLineAtOffset(startX + (tableWidth * colWidths[j] / 2) - (PDType1Font.HELVETICA.getStringWidth(text) / 1000 * 10 / 2), currentY);
+                    // Calcular offset para centrar el texto en la columna
+                    float textWidth = PDType1Font.HELVETICA.getStringWidth(text) / 1000 * 10;
+                    float offset = startX + (tableWidth * colWidths[j] / 2) - (textWidth / 2);
+                    contentStream.newLineAtOffset(offset, currentY);
                     contentStream.showText(text);
                     contentStream.endText();
                     startX += tableWidth * colWidths[j];
@@ -378,11 +407,11 @@ public class PantallaCostos extends JFrame {
             currentY -= 30;
             contentStream.beginText();
             contentStream.newLineAtOffset(margin, currentY);
-            contentStream.showText("COSTO TOTAL POR PRODUCTO: " + txtCostoTotal.getText());
+            contentStream.showText("COSTO TOTAL DE INGREDIENTES: " + txtCostoTotal.getText());
             contentStream.newLineAtOffset(0, -rowHeight);
             contentStream.showText("GASTOS EXTRA: " + txtGastosExtra.getText());
-            contentStream.newLineAtOffset(0, -rowHeight); 
-            contentStream.showText("PRECIO FINAL: " + txtPrecioFinal.getText());
+            contentStream.newLineAtOffset(0, -rowHeight);
+            contentStream.showText("PRECIO FINAL ESTIMADO: " + txtPrecioFinal.getText());
             contentStream.endText();
 
 
@@ -421,7 +450,7 @@ public class PantallaCostos extends JFrame {
     }
 
     @SuppressWarnings("deprecation")
-	private void guardarRecetaDesdePantallaCostos() {
+    private void guardarRecetaDesdePantallaCostos() {
         String nombreReceta = JOptionPane.showInputDialog(this, "Ingrese el nombre de la receta:");
         if (nombreReceta == null || nombreReceta.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "El nombre de la receta no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -436,41 +465,43 @@ public class PantallaCostos extends JFrame {
         Receta nuevaReceta = new Receta(nombreReceta.trim(), descripcionReceta.trim());
         nuevaReceta.setFechaCreacion(new Date());
 
-        double costoTotalCalculado = 0.0;
-        // *** CAMBIO CLAVE: Usar la función robusta para parsear el costo total al guardar ***
-        costoTotalCalculado = parsearNumero(txtCostoTotal.getText());
-        
+        double costoTotalCalculado = parsearNumero(txtCostoTotal.getText());
         nuevaReceta.setCostoTotal(costoTotalCalculado);
 
         List<RecetaIngrediente> recetaIngredientes = new ArrayList<>();
         for (int i = 0; i < tablaIngredientes.getRowCount(); i++) {
-            Object productoObj = tablaIngredientes.getValueAt(i, 0);
-            Object cantidadObj = tablaIngredientes.getValueAt(i, 4);
+            Object productoObj = tablaIngredientes.getValueAt(i, 0); // Objecto Ingrediente
+            Object cantidadUtilizadaObj = tablaIngredientes.getValueAt(i, 4); // Cantidad Utilizada
+            Object unidadUtilizadaObj = tablaIngredientes.getValueAt(i, 5); // Unidad Utilizada
 
-            if (productoObj != null && !productoObj.toString().isEmpty() && cantidadObj != null && !cantidadObj.toString().isEmpty()) {
-                String nombreIngrediente = productoObj.toString();
+            if (productoObj != null && productoObj instanceof Ingrediente &&
+                cantidadUtilizadaObj != null && !cantidadUtilizadaObj.toString().isEmpty()) {
+
+                Ingrediente ingrediente = (Ingrediente) productoObj;
                 try {
-                    // Usar la función robusta para parsear la cantidad utilizada
-                    double cantidadUtilizada = parsearNumero(cantidadObj.toString());
+                    double cantidadUtilizada = parsearNumero(cantidadUtilizadaObj.toString());
+                    String unidadUtilizada = (unidadUtilizadaObj != null) ? unidadUtilizadaObj.toString() : "";
 
-                    Ingrediente ingrediente = ingredientesMap.get(nombreIngrediente);
-                    if (ingrediente == null) {
-                        try (Session session = sessionFactory.openSession()) {
-                            ingrediente = session.createQuery("FROM Ingrediente WHERE nombre = :nombre", Ingrediente.class)
-                                .setParameter("nombre", nombreIngrediente)
-                                .uniqueResult();
-                        }
+                    // Calcular el costo real de este ingrediente en la receta
+                    double costoDeCompra = ingrediente.getCostoDeCompra();
+                    double cantidadDeCompra = ingrediente.getCantidadDeCompra();
+                    double costoRealParaEsteIngrediente = 0.0;
+                    if (cantidadDeCompra > 0) {
+                        costoRealParaEsteIngrediente = (costoDeCompra / cantidadDeCompra) * cantidadUtilizada;
                     }
 
-                    if (ingrediente != null) {
-                        RecetaIngrediente ri = new RecetaIngrediente(nuevaReceta, ingrediente, cantidadUtilizada);
-                        ri.setCostoTotal(cantidadUtilizada * ingrediente.getCostoUnitario()); 
-                        recetaIngredientes.add(ri);
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Ingrediente '" + nombreIngrediente + "' no encontrado. No se guardará en la receta.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-                    }
+                    RecetaIngrediente ri = new RecetaIngrediente(nuevaReceta, ingrediente, cantidadUtilizada);
+                    // Aquí la idea es que el RecetaIngrediente sepa su costo real por sí mismo
+                    // Pero como el método getCostoReal() de RecetaIngrediente usa Ingrediente.getCostoUnitario(),
+                    // deberíamos asegurar que eso funcione con el nuevo Ingrediente.
+                    // Para evitar más cambios complejos en RecetaIngrediente ahora, podemos pasarle el costo calculado.
+                    ri.setCostoTotal(costoRealParaEsteIngrediente); // Usamos setCostoTotal temporalmente para guardar el valor
+                    ri.setUnidadUtilizada(unidadUtilizada); // Nuevo campo en RecetaIngrediente si se necesita guardar
+
+                    recetaIngredientes.add(ri);
+
                 } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this, "Cantidad utilizada inválida para el ingrediente '" + nombreIngrediente + "'.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Cantidad utilizada inválida para el ingrediente '" + ingrediente.getNombre() + "'.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
@@ -482,7 +513,7 @@ public class PantallaCostos extends JFrame {
         }
 
         nuevaReceta.setRecetaIngredientes(recetaIngredientes);
-        nuevaReceta.recalcularCostoTotal(); 
+        nuevaReceta.recalcularCostoTotal(); // Este método en Receta también deberá usar la nueva lógica.
 
         Session session = null;
         Transaction tx = null;
@@ -518,6 +549,8 @@ public class PantallaCostos extends JFrame {
 
     private void agregarFilaATabla() {
         DefaultTableModel model = (DefaultTableModel) tablaIngredientes.getModel();
-        model.addRow(new Object[]{null, "", 0.0, 0.0, 0.0, String.format("$%.2f", 0.0)});
+        // Las nuevas filas no tienen valores por defecto para las columnas que antes eran 0.0 o String.format.
+        // Se inicializan como nulos o cadenas vacías para que el usuario las complete.
+        model.addRow(new Object[]{null, "", 0.0, 0.0, 0.0, "", String.format("$%.2f", 0.0)});
     }
 }

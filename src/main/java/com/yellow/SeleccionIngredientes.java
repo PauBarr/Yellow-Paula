@@ -83,7 +83,7 @@ public class SeleccionIngredientes extends JFrame {
         for (Ingrediente ingrediente : ingredientes) {
             model.addRow(new Object[]{
                 ingrediente.getNombre(),         // Cambiado de getNombre() a getProducto()
-                ingrediente.getCostoUnitario(),    // Cambiado de getCostoPorUnidad() a getCostoUnitario()
+                ingrediente.getCostoUnitarioCalculado(),    // Cambiado de getCostoPorUnidad() a getCostoUnitario()
                 0,                                 // Suponiendo que 0 es un valor predeterminado o a completar
                 0                                  // Suponiendo que 0 es un valor predeterminado o a completar
             });

@@ -29,34 +29,31 @@ public class VisualizarRecetas extends JFrame {
         this.ventanaAnterior = ventanaAnterior;
         this.sessionFactory = sessionFactory;
         initComponents();
-        cargarDatosTabla(); // Carga las recetas al iniciar la ventana
+        cargarDatosTabla();
     }
 
     private void initComponents() {
         setTitle("Visualizar y Gestionar Recetas");
-        setSize(800, 600); // Tamaño de la ventana
-        setLocationRelativeTo(null); // Centra la ventana
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Cierra solo esta ventana
-        setLayout(new BorderLayout()); // Usa un diseño BorderLayout
+        setSize(800, 600);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
 
-        // Título de la pantalla
-        JLabel tituloLabel = new JLabel("LISTA DE RECETAS", SwingConstants.CENTER); // Centra el texto
-        tituloLabel.setFont(new Font("Arial", Font.BOLD, 20)); // Fuente y tamaño
-        add(tituloLabel, BorderLayout.NORTH); // Lo coloca arriba
+        JLabel tituloLabel = new JLabel("LISTA DE RECETAS", SwingConstants.CENTER);
+        tituloLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        add(tituloLabel, BorderLayout.NORTH);
 
-        // Configurar el modelo de la tabla
         String[] columnNames = {"ID", "Nombre Receta", "Descripción", "Costo Total", "Fecha Creación"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Las celdas de la tabla no serán editables
+                return false;
             }
         };
-        recetasTable = new JTable(tableModel); // Crea la tabla
-        JScrollPane scrollPane = new JScrollPane(recetasTable); // Agrega scroll si hay muchas recetas
-        add(scrollPane, BorderLayout.CENTER); // Coloca la tabla en el centro
+        recetasTable = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(recetasTable);
+        add(scrollPane, BorderLayout.CENTER);
 
-        // Panel para los botones
         JPanel buttonPanel = new JPanel();
         eliminarButton = new JButton("ELIMINAR RECETA SELECCIONADA");
         actualizarCostosButton = new JButton("ACTUALIZAR COSTOS DE RECETA");
@@ -67,31 +64,28 @@ public class VisualizarRecetas extends JFrame {
         buttonPanel.add(actualizarCostosButton);
         buttonPanel.add(verDetalleButton);
         buttonPanel.add(atrasButton);
-        add(buttonPanel, BorderLayout.SOUTH); // Coloca los botones abajo
+        add(buttonPanel, BorderLayout.SOUTH);
 
-        // Acciones de los botones
         eliminarButton.addActionListener(e -> eliminarRecetaSeleccionada());
         actualizarCostosButton.addActionListener(e -> actualizarCostoRecetaSeleccionada());
         verDetalleButton.addActionListener(e -> verDetalleReceta());
         atrasButton.addActionListener(e -> irAtras());
     }
 
-    // Método para cargar los datos de las recetas desde la base de datos a la tabla
     private void cargarDatosTabla() {
-        tableModel.setRowCount(0); // Vacía la tabla antes de cargar
-        try (Session session = sessionFactory.openSession()) { // Abre una sesión de Hibernate
-            // Consulta todas las recetas de la base de datos
+        tableModel.setRowCount(0);
+        try (Session session = sessionFactory.openSession()) {
             List<Receta> recetas = session.createQuery("FROM Receta", Receta.class).list();
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // Formato de fecha
-            for (Receta receta : recetas) { // Recorre cada receta
-                Object[] rowData = { // Crea una fila de datos para la tabla
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            for (Receta receta : recetas) {
+                Object[] rowData = {
                     receta.getId(),
                     receta.getNombre(),
                     receta.getDescripcion(),
-                    String.format("$%.2f", receta.getCostoTotal()), // Formato de moneda
-                    sdf.format(receta.getFechaCreacion()) // Formato de fecha
+                    String.format("$%.2f", receta.getCostoTotal()),
+                    sdf.format(receta.getFechaCreacion())
                 };
-                tableModel.addRow(rowData); // Añade la fila a la tabla
+                tableModel.addRow(rowData);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al cargar recetas en la tabla: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -99,49 +93,46 @@ public class VisualizarRecetas extends JFrame {
         }
     }
 
-    // Método para eliminar la receta seleccionada
     private void eliminarRecetaSeleccionada() {
-        int selectedRow = recetasTable.getSelectedRow(); // Obtiene la fila seleccionada
-        if (selectedRow == -1) { // Si no hay fila seleccionada
+        int selectedRow = recetasTable.getSelectedRow();
+        if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, "Por favor, seleccione una receta para eliminar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Pide confirmación al usuario
         int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de que desea eliminar la receta seleccionada?", "Confirmar Eliminación", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) { // Si el usuario confirma
-            Integer recetaId = (Integer) tableModel.getValueAt(selectedRow, 0); // Obtiene el ID de la receta
+        if (confirm == JOptionPane.YES_OPTION) {
+            Integer recetaId = (Integer) tableModel.getValueAt(selectedRow, 0);
 
             Session session = null;
             Transaction transaction = null;
             try {
-                session = sessionFactory.openSession(); // Abre una nueva sesión
-                transaction = session.beginTransaction(); // Inicia una transacción
+                session = sessionFactory.openSession();
+                transaction = session.beginTransaction();
 
-                Receta receta = session.get(Receta.class, recetaId); // Busca la receta por ID
+                Receta receta = session.get(Receta.class, recetaId);
                 if (receta != null) {
-                    session.delete(receta); // Elimina la receta
-                    transaction.commit(); // Confirma la transacción
+                    session.delete(receta);
+                    transaction.commit();
                     JOptionPane.showMessageDialog(this, "Receta eliminada exitosamente.");
-                    cargarDatosTabla(); // Recarga la tabla
+                    cargarDatosTabla();
                 } else {
                     JOptionPane.showMessageDialog(this, "Receta no encontrada.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (Exception ex) {
                 if (transaction != null) {
-                    transaction.rollback(); // Si hay error, revierte la transacción
+                    transaction.rollback();
                 }
                 JOptionPane.showMessageDialog(this, "Error al eliminar la receta: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             } finally {
                 if (session != null) {
-                    session.close(); // Cierra la sesión
+                    session.close();
                 }
             }
         }
     }
 
-    // Método para actualizar el costo de la receta seleccionada
     private void actualizarCostoRecetaSeleccionada() {
         int selectedRow = recetasTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -160,16 +151,16 @@ public class VisualizarRecetas extends JFrame {
             Receta receta = session.get(Receta.class, recetaId);
             if (receta != null) {
                 // Es crucial recargar el estado de los ingredientes desde la base de datos
-                // para asegurar que se usen los costos unitarios más actuales.
+                // para asegurar que se usen los costos de compra más actuales.
                 for (RecetaIngrediente ri : receta.getRecetaIngredientes()) {
                     session.refresh(ri.getIngrediente()); // Recarga el ingrediente desde la BD
                 }
 
-                receta.recalcularCostoTotal(); // Llama al nuevo método para recalcular el costo
+                receta.recalcularCostoTotal(); // Llama al método para recalcular el costo
                 session.merge(receta); // Actualiza la receta en la base de datos
                 transaction.commit();
                 JOptionPane.showMessageDialog(this, "Costo de la receta actualizado exitosamente.");
-                cargarDatosTabla(); // Recarga la tabla para mostrar el costo actualizado
+                cargarDatosTabla();
             } else {
                 JOptionPane.showMessageDialog(this, "Receta no encontrada.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -186,7 +177,6 @@ public class VisualizarRecetas extends JFrame {
         }
     }
 
-    // Método para ver el detalle de una receta
     private void verDetalleReceta() {
         int selectedRow = recetasTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -210,7 +200,9 @@ public class VisualizarRecetas extends JFrame {
                     for (RecetaIngrediente ri : receta.getRecetaIngredientes()) {
                         detalle.append("  - ").append(ri.getIngrediente().getNombre())
                                .append(": ").append(ri.getCantidadUtilizada())
-                               .append(" (Costo Unitario: $").append(String.format("%.2f", ri.getIngrediente().getCostoUnitario()))
+                               .append(" ").append(ri.getUnidadUtilizada()) // Mostrar la unidad utilizada
+                               .append(" (Costo de Compra: $").append(String.format("%.2f", ri.getIngrediente().getCostoDeCompra())) // Costo de compra
+                               .append(" por ").append(ri.getIngrediente().getCantidadDeCompra()).append(" ").append(ri.getIngrediente().getTipoPesoLt()) // Cantidad de compra y su tipo
                                .append(", Costo Real en Receta: $").append(String.format("%.2f", ri.getCostoReal()))
                                .append(")\n");
                     }
@@ -221,7 +213,7 @@ public class VisualizarRecetas extends JFrame {
                 JTextArea detailArea = new JTextArea(detalle.toString());
                 detailArea.setEditable(false);
                 JScrollPane scrollPane = new JScrollPane(detailArea);
-                scrollPane.setPreferredSize(new Dimension(400, 300)); // Ajustar tamaño
+                scrollPane.setPreferredSize(new Dimension(450, 350)); // Ajustar tamaño
 
                 JOptionPane.showMessageDialog(this, scrollPane, "Detalle de Receta: " + receta.getNombre(), JOptionPane.INFORMATION_MESSAGE);
 
@@ -234,7 +226,6 @@ public class VisualizarRecetas extends JFrame {
         }
     }
 
-    // Método para regresar a la ventana anterior
     private void irAtras() {
         if (ventanaAnterior != null) {
             ventanaAnterior.setVisible(true);

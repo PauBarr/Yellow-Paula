@@ -6,145 +6,136 @@ import java.util.List;
 
 public class Receta {
 
-    private int id; //
-    private String nombre; //
-    private String descripcion; //
-    private double costoTotal; //
-    private Date fechaCreacion; //
-    private int tiempoPreparacion; //
-    // Cambia a una lista de RecetaIngrediente para la relación Many-to-Many con atributos
-    private List<RecetaIngrediente> recetaIngredientes = new ArrayList<>(); // CAMBIO AQUÍ
-    private List<Categoria> categorias = new ArrayList<>(); //
+    private int id;
+    private String nombre;
+    private String descripcion;
+    private double costoTotal;
+    private Date fechaCreacion;
+    private int tiempoPreparacion;
+    private List<RecetaIngrediente> recetaIngredientes = new ArrayList<>();
+    private List<Categoria> categorias = new ArrayList<>();
 
-    public Receta() {} //
+    public Receta() {}
 
-    public Receta(String nombre, String descripcion) { //
-        this.nombre = nombre; //
-        this.descripcion = descripcion; //
-        this.costoTotal = 0.0; //
-        this.fechaCreacion = new Date(); //
-        this.tiempoPreparacion = 0; //
+    public Receta(String nombre, String descripcion) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.costoTotal = 0.0;
+        this.fechaCreacion = new Date();
+        this.tiempoPreparacion = 0;
     }
 
-    // Eliminar o ajustar estos métodos si ya no tienen sentido directo aquí,
-    // ya que la relación es ahora a través de RecetaIngrediente
-    public String getProducto() { //
-        // Podrías devolver el producto del primer ingrediente de recetaIngredientes si es necesario un "principal"
-        return recetaIngredientes.isEmpty() ? null : recetaIngredientes.get(0).getIngrediente().getNombre(); //
+    // Los siguientes métodos se eliminan o se ajustan si ya no tienen sentido directo aquí.
+    // Si realmente los necesitas, se tendrían que refactorizar para iterar sobre `recetaIngredientes`.
+    /*
+    public String getProducto() {
+        return recetaIngredientes.isEmpty() ? null : recetaIngredientes.get(0).getIngrediente().getNombre();
     }
 
-    public String getTipoPesoLt() { //
-        return recetaIngredientes.isEmpty() ? null : recetaIngredientes.get(0).getIngrediente().getTipoPesoLt(); //
+    public String getTipoPesoLt() {
+        return recetaIngredientes.isEmpty() ? null : recetaIngredientes.get(0).getIngrediente().getTipoPesoLt();
     }
 
-    public double getPesoLtR() { //
-        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getIngrediente().getPesoLtR(); //
+    public double getPesoLtR() {
+        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getIngrediente().getPesoLtR();
     }
 
-    public double getCostoUnitario() { //
-        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getIngrediente().getCostoUnitario(); //
+    public double getCostoUnitario() {
+        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getIngrediente().getCostoUnitarioCalculado(); // Ajustado
     }
 
-    public double getCantidadUtilizada() { //
-        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getCantidadUtilizada(); //
+    public double getCantidadUtilizada() {
+        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getCantidadUtilizada();
     }
 
-    public double getCostoReal() { //
-        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getCostoReal(); //
+    public double getCostoReal() {
+        return recetaIngredientes.isEmpty() ? 0.0 : recetaIngredientes.get(0).getCostoReal();
+    }
+    */
+
+    public int getId() {
+        return id;
     }
 
-    // Método para recalcular el costo total de la receta
-    public void calcularCostoTotal() { //
-        this.costoTotal = recetaIngredientes.stream() // CAMBIO AQUÍ
-            .mapToDouble(RecetaIngrediente::getCostoReal) // CAMBIO AQUÍ
-            .sum(); //
+    public void setId(int id) {
+        this.id = id;
     }
 
-
-    public int getId() { //
-        return id; //
+    public String getNombre() {
+        return nombre;
     }
 
-    public void setId(int id) { //
-        this.id = id; //
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 
-    public String getNombre() { //
-        return nombre; //
+    public String getDescripcion() {
+        return descripcion;
     }
 
-    public void setNombre(String nombre) { //
-        this.nombre = nombre; //
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
-    public String getDescripcion() { //
-        return descripcion; //
+    public double getCostoTotal() {
+        return costoTotal;
     }
 
-    public void setDescripcion(String descripcion) { //
-        this.descripcion = descripcion; //
+    public void setCostoTotal(double costoTotal) {
+        this.costoTotal = costoTotal;
     }
 
-    public double getCostoTotal() { //
-        return costoTotal; //
+    public Date getFechaCreacion() {
+        return fechaCreacion;
     }
 
-    public void setCostoTotal(double costoTotal) { //
-        this.costoTotal = costoTotal; //
+    public void setFechaCreacion(Date fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 
-    public Date getFechaCreacion() { //
-        return fechaCreacion; //
+    public int getTiempoPreparacion() {
+        return tiempoPreparacion;
     }
 
-    public void setFechaCreacion(Date fechaCreacion) { //
-        this.fechaCreacion = fechaCreacion; //
+    public void setTiempoPreparacion(int tiempoPreparacion) {
+        this.tiempoPreparacion = tiempoPreparacion;
     }
 
-    public int getTiempoPreparacion() { //
-        return tiempoPreparacion; //
+    public List<RecetaIngrediente> getRecetaIngredientes() {
+        return recetaIngredientes;
     }
 
-    public void setTiempoPreparacion(int tiempoPreparacion) { //
-        this.tiempoPreparacion = tiempoPreparacion; //
+    public void setRecetaIngredientes(List<RecetaIngrediente> recetaIngredientes) {
+        this.recetaIngredientes = recetaIngredientes;
     }
 
-    public List<RecetaIngrediente> getRecetaIngredientes() { // CAMBIO AQUÍ
-        return recetaIngredientes; //
+    public List<Categoria> getCategorias() {
+        return categorias;
     }
 
-    public void setRecetaIngredientes(List<RecetaIngrediente> recetaIngredientes) { // CAMBIO AQUÍ
-        this.recetaIngredientes = recetaIngredientes; //
-    }
-
-    public List<Categoria> getCategorias() { //
-        return categorias; //
-    }
-
-    public void setCategorias(List<Categoria> categorias) { //
-        this.categorias = categorias; //
+    public void setCategorias(List<Categoria> categorias) {
+        this.categorias = categorias;
     }
 
     // Nuevo método para recalcular el costo total de la receta
+    // Este método ya estaba bien y se beneficia de los cambios en RecetaIngrediente.getCostoReal()
     public void recalcularCostoTotal() {
         double nuevoCostoTotal = 0.0;
-        // Itera sobre cada ingrediente de la receta
         for (RecetaIngrediente ri : this.recetaIngredientes) {
-            // Suma el costo real de cada ingrediente (cantidad utilizada * costo unitario actual del ingrediente)
-            nuevoCostoTotal += ri.getCantidadUtilizada() * ri.getIngrediente().getCostoUnitario();
+            nuevoCostoTotal += ri.getCostoReal(); // Usa el getCostoReal() de RecetaIngrediente
         }
-        this.costoTotal = nuevoCostoTotal; // Actualiza el costo total de la receta
+        this.costoTotal = nuevoCostoTotal;
     }
 
-    public void mostrarDetallesIngredientes() { //
-        for (RecetaIngrediente ri : recetaIngredientes) { // CAMBIO AQUÍ
-            System.out.println("Producto: " + ri.getIngrediente().getNombre()); //
-            System.out.println("Tipo de Peso: " + ri.getIngrediente().getTipoPesoLt()); //
-            System.out.println("Peso/Litro Real: " + ri.getIngrediente().getPesoLtR()); //
-            System.out.println("Costo Unitario: " + ri.getIngrediente().getCostoUnitario()); //
-            System.out.println("Cantidad Utilizada: " + ri.getCantidadUtilizada()); //
-            System.out.println("Costo Real: " + ri.getCostoReal()); //
-            System.out.println("-----------------------------"); //
+    public void mostrarDetallesIngredientes() {
+        for (RecetaIngrediente ri : recetaIngredientes) {
+            System.out.println("Producto: " + ri.getIngrediente().getNombre());
+            System.out.println("Unidad de Compra: " + ri.getIngrediente().getTipoPesoLt()); // Cambiado
+            System.out.println("Cantidad de Compra: " + ri.getIngrediente().getCantidadDeCompra()); // Cambiado
+            System.out.println("Costo de Compra: " + ri.getIngrediente().getCostoDeCompra()); // Cambiado
+            System.out.println("Cantidad Utilizada: " + ri.getCantidadUtilizada() + " " + ri.getUnidadUtilizada()); // Añadida unidad utilizada
+            System.out.println("Costo Real: " + ri.getCostoReal());
+            System.out.println("-----------------------------");
         }
     }
 }

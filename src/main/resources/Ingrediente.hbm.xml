@@ -1,17 +1,12 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.org/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class name="com.yellow.Ingrediente" table="ingredientes">
-        <!-- ID del ingrediente -->
         <id name="id" column="id">
             <generator class="identity"/>
         </id>
 
-        <!-- Propiedades del ingrediente -->
-        <property name="nombre" column="producto" not-null="true"/>
-        <property name="tipoPesoLt" column="tipo_peso_lt"/>
-        <property name="pesoLtR" column="peso_lt_r"/>
-        <property name="costoUnitario" column="costo_unitario"/>
-        <property name="cantidadUtilizada" column="cant_utilizada"/>
-        <property name="costoReal" column="costo_real"/>
+        <property name="nombre" column="nombre_ingrediente" not-null="true"/> <property name="tipoPesoLt" column="unidad_de_compra"/>
+        <property name="cantidadDeCompra" column="cantidad_de_compra"/>
+        <property name="costoDeCompra" column="costo_de_compra"/>
     </class>
 </hibernate-mapping>
