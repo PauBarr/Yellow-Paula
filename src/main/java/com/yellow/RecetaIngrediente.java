@@ -49,6 +49,14 @@ public class RecetaIngrediente {
 		this.cantidadUtilizada = cantidadUtilizada;
 	}
 
+    // Nuevo método para obtener el costo real de este RecetaIngrediente
+    public double getCostoReal() {
+        if (ingrediente != null) {
+            return cantidadUtilizada * ingrediente.getCostoUnitario();
+        }
+        return 0.0;
+    }
+
 	public void setCostoTotal(double costoTotal) {
 		// TODO Auto-generated method stub
 

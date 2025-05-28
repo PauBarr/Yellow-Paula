@@ -1,10 +1,8 @@
 package com.yellow;
 
-
 public class Ingrediente {
 
     private int id;
-
     private String nombre;       // Nombre del producto o ingrediente
     private String tipoPesoLt;     // Tipo de peso o medida (Kg, Lt, etc.)
     private double pesoLtR;        // Peso o cantidad en la unidad correspondiente

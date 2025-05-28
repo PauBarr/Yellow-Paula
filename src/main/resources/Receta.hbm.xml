@@ -8,16 +8,15 @@
             <generator class="identity"/>
         </id>
 
-        <!-- Propiedades de la receta -->
-        <property name="descripcion" column="descripcion"/>
+        <property name="nombre" column="nombre_receta"/> <property name="descripcion" column="descripcion"/>
         <property name="costoTotal" column="costo_total"/>
         <property name="fechaCreacion" column="fecha_creacion"/>
         <property name="tiempoPreparacion" column="tiempo_preparacion"/>
 
+
         <!-- Relación One-to-Many con la tabla de ingredientes -->
-        <bag name="ingredientes" inverse="true" cascade="all">
-            <key column="receta_id"/>
-            <one-to-many class="com.yellow.Ingrediente"/>
+      <bag name="recetaIngredientes" inverse="true" cascade="all">
+            <key column="id_receta"/> <one-to-many class="com.yellow.RecetaIngrediente"/>
         </bag>
 
         <!-- Relación Many-to-Many con la tabla de categorías -->
@@ -27,4 +26,3 @@
         </bag>
     </class>
 </hibernate-mapping>
-
