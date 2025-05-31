@@ -111,9 +111,11 @@ public class PantallaPrincipal extends JFrame {
 
         // Establecer acciones (asegúrate de que estas clases y constructores existan y sean correctos)
         btnNuevoProyecto.addActionListener(e -> {
-            IngresoReceta ingresoReceta = new IngresoReceta(sessionFactory);
+            // MODIFICADO: Abrir IngresoReceta (que ahora es el JFrame principal para la gestión de recetas)
+            // Se le pasa 'this' (la PantallaPrincipal actual) como la ventana anterior
+            IngresoReceta ingresoReceta = new IngresoReceta(this, sessionFactory);
             ingresoReceta.setVisible(true);
-            dispose();
+            this.setVisible(false); // Oculta PantallaPrincipal
         });
 
         btnIngresoIngredientes.addActionListener(e -> {

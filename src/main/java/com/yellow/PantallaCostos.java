@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.ArrayList;
 import java.awt.Desktop;
 
-// Importaciones para PDFBox (ya presentes)
+// Importaciones para PDFBox
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -34,7 +34,8 @@ import java.util.Set;
 import java.util.HashSet;
 
 
-public class PantallaCostos extends JFrame {
+// MODIFICADO: Ahora extiende JPanel
+public class PantallaCostos extends JPanel {
 
     private static final long serialVersionUID = 1L;
     private SessionFactory sessionFactory;
@@ -50,7 +51,12 @@ public class PantallaCostos extends JFrame {
     private List<Categoria> categoriasSeleccionadas;
     private JButton botonSeleccionarCategorias;
 
-    public PantallaCostos(SessionFactory sessionFactory) {
+    // AÑADIDO: Referencia a la ventana padre (IngresoReceta)
+    private IngresoReceta ventanaPadre;
+
+    // AÑADIDO/CORREGIDO: Constructor que acepta IngresoReceta y SessionFactory
+    public PantallaCostos(IngresoReceta ventanaPadre, SessionFactory sessionFactory) {
+        this.ventanaPadre = ventanaPadre; // Guardar la referencia
         this.sessionFactory = sessionFactory;
         mapaIngredientes = new HashMap<>();
         categoriasSeleccionadas = new ArrayList<>();
@@ -59,10 +65,9 @@ public class PantallaCostos extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Pantalla de Costos - Yellow");
-        setSize(900, 600);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
+        setBackground(new Color(255, 255, 220));
+
 
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(255, 255, 220));
@@ -164,8 +169,7 @@ public class PantallaCostos extends JFrame {
         panelCostos.add(etiquetaPrecioFinal);
         panelCostos.add(campoPrecioFinal);
 
-        // MODIFICACIÓN APLICADA AQUÍ: CAMBIO DE FlowLayout A GridLayout
-        JPanel panelBotonesInferior = new JPanel(new GridLayout(2, 4, 10, 10)); // 2 filas, 4 columnas
+        JPanel panelBotonesInferior = new JPanel(new GridLayout(2, 4, 10, 10));
         panelBotonesInferior.setBackground(new Color(255, 255, 220));
 
         JButton botonRecalcularPrecio = new JButton("RECALCULAR PRECIO FINAL");
@@ -190,7 +194,6 @@ public class PantallaCostos extends JFrame {
         botonGuardarReceta.addActionListener(e -> guardarRecetaDesdePantallaCostos());
         panelBotonesInferior.add(botonGuardarReceta);
 
-        // --- CÓDIGO PARA EL ATAJO DE TECLADO ---
         Action guardarAccion = new AbstractAction("guardarReceta") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -198,11 +201,10 @@ public class PantallaCostos extends JFrame {
             }
         };
 
-        panelPrincipal.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                       .put(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK), "guardarReceta");
 
-        panelPrincipal.getActionMap().put("guardarReceta", guardarAccion);
-        // --- FIN CÓDIGO PARA EL ATAJO DE TECLADO ---
+        this.getActionMap().put("guardarReceta", guardarAccion);
 
 
         botonImprimirPlanilla = new JButton("IMPRIMIR PLANILLA");
@@ -226,18 +228,12 @@ public class PantallaCostos extends JFrame {
         botonAgregarFila.addActionListener(e -> agregarFilaATabla());
         panelBotonesInferior.add(botonAgregarFila);
 
-        // --- Botón de Regresar Restaurado ---
         JButton botonRegresar = new JButton("Regresar");
         botonRegresar.setBackground(Color.GRAY);
         botonRegresar.setForeground(Color.WHITE);
         botonRegresar.setFont(new Font("Arial", Font.BOLD, 12));
-        botonRegresar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                regresarAPantallaPrincipal();
-            }
-        });
-        panelBotonesInferior.add(botonRegresar); // Se agrega de nuevo al panel de botones
-        // --- Fin Restauración del Botón de Regresar ---
+        botonRegresar.addActionListener(e -> ventanaPadre.mostrarPanel("principal"));
+        panelBotonesInferior.add(botonRegresar);
 
         panelInferior.add(panelCostos);
         panelInferior.add(Box.createVerticalStrut(10));
@@ -295,11 +291,6 @@ public class PantallaCostos extends JFrame {
         }
     }
 
-    private void regresarAPantallaPrincipal() {
-        this.dispose();
-        PantallaPrincipal pantallaPrincipal = new PantallaPrincipal(sessionFactory);
-        pantallaPrincipal.setVisible(true);
-    }
 
     private void cargarIngredientes() {
         try (Session session = sessionFactory.openSession()) {
@@ -315,7 +306,8 @@ public class PantallaCostos extends JFrame {
     }
 
     private void seleccionarCategorias() {
-        SeleccionarCategoriasDialog dialogoCategorias = new SeleccionarCategoriasDialog(this, sessionFactory, categoriasSeleccionadas);
+        // MODIFICADO: Ahora pasamos directamente 'this.ventanaPadre' (que es un JFrame) como padre del diálogo.
+        SeleccionarCategoriasDialog dialogoCategorias = new SeleccionarCategoriasDialog(this.ventanaPadre, sessionFactory, categoriasSeleccionadas);
         dialogoCategorias.setVisible(true);
 
         if (dialogoCategorias.isConfirmed()) {

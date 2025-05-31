@@ -9,10 +9,12 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.List;
 
-public class GestionCategoriasScreen extends JFrame {
+// MODIFICADO: Ahora extiende JPanel
+public class GestionCategoriasScreen extends JPanel {
 
     private SessionFactory sessionFactory;
-    private JFrame ventanaAnterior;
+    // ELIMINADO: private JFrame ventanaAnterior; // Ya no es JFrame, ahora es IngresoReceta
+    private IngresoReceta ventanaPadre; // AÑADIDO: Referencia a la ventana padre (IngresoReceta)
 
     // Componentes para la gestión de categorías
     private JTable categoriaTable;
@@ -22,28 +24,31 @@ public class GestionCategoriasScreen extends JFrame {
     private JButton btnAgregarCategoria;
     private JButton btnEditarCategoria;
     private JButton btnEliminarCategoria;
+    private JButton btnVerRecetasCategoria;
 
-    public GestionCategoriasScreen(JFrame ventanaAnterior, SessionFactory sessionFactory) {
-        this.ventanaAnterior = ventanaAnterior;
+    // MODIFICADO: Constructor ahora recibe IngresoReceta como padre
+    public GestionCategoriasScreen(IngresoReceta ventanaPadre, SessionFactory sessionFactory) {
+        this.ventanaPadre = ventanaPadre; // Guardar la referencia
         this.sessionFactory = sessionFactory;
         initComponents();
         cargarCategoriasTabla();
     }
 
     private void initComponents() {
-        setTitle("Gestión de Categorías - Yellow");
-        setSize(600, 500);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        // ELIMINADO: setTitle("Gestión de Categorías - Yellow");
+        // ELIMINADO: setSize(600, 500);
+        // ELIMINADO: setLocationRelativeTo(null);
+        // ELIMINADO: setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(new Color(255, 255, 220));
-        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        // MODIFICADO: Configuración del panel en sí
+        setLayout(new BorderLayout());
+        setBackground(new Color(255, 255, 220));
+        setBorder(new EmptyBorder(10, 10, 10, 10)); // Mantener el borde del panel
 
         JLabel titleLabel = new JLabel("GESTIÓN DE CATEGORÍAS", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(new Color(60, 60, 60));
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        add(titleLabel, BorderLayout.NORTH); // Añadido al JPanel (este)
 
         String[] columnNames = {"ID", "Nombre de Categoría"};
         categoriaTableModel = new DefaultTableModel(columnNames, 0) {
@@ -54,33 +59,35 @@ public class GestionCategoriasScreen extends JFrame {
         };
         categoriaTable = new JTable(categoriaTableModel);
         JScrollPane scrollPane = new JScrollPane(categoriaTable);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER); // Añadido al JPanel (este)
 
         categoriaTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && categoriaTable.getSelectedRow() != -1) {
+            if (!e.getValueIsAdjusting()) {
                 int selectedRow = categoriaTable.getSelectedRow();
-                categoriaIdField.setText(categoriaTableModel.getValueAt(selectedRow, 0).toString());
-                categoriaNombreField.setText(categoriaTableModel.getValueAt(selectedRow, 1).toString());
+                if (selectedRow != -1) {
+                    categoriaIdField.setText(categoriaTableModel.getValueAt(selectedRow, 0).toString());
+                    categoriaNombreField.setText(categoriaTableModel.getValueAt(selectedRow, 1).toString());
+                    btnVerRecetasCategoria.setEnabled(true);
+                } else {
+                    limpiarCamposCategoria();
+                    btnVerRecetasCategoria.setEnabled(false);
+                }
             }
         });
 
-        // =====================================================================
-        // INICIO DE LA CORRECCIÓN: Asegurar que los componentes se añadan al panel
-        // =====================================================================
-        JPanel inputAndButtonsPanel = new JPanel(new BorderLayout(5, 5)); // Panel para los campos de texto y botones
+        JPanel inputAndButtonsPanel = new JPanel(new BorderLayout(5, 5));
         inputAndButtonsPanel.setBackground(new Color(255, 255, 220));
-        inputAndButtonsPanel.setBorder(new EmptyBorder(10, 0, 0, 0)); // Pequeño borde superior
+        inputAndButtonsPanel.setBorder(new EmptyBorder(10, 0, 0, 0));
 
-        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5)); // Panel para el campo de nombre
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         inputPanel.setBackground(new Color(255, 255, 220));
         inputPanel.add(new JLabel("Nombre de Categoría:"));
         categoriaNombreField = new JTextField(20);
         inputPanel.add(categoriaNombreField);
-        // El categoriaIdField es solo para la lógica interna, no lo mostramos al usuario para que no lo edite
-        categoriaIdField = new JTextField(5); // Inicializado aquí, aunque no se añade visiblemente
+        categoriaIdField = new JTextField(5);
         categoriaIdField.setEditable(false);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10)); // Panel para los botones CRUD
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonPanel.setBackground(new Color(255, 255, 220));
 
         btnAgregarCategoria = new JButton("Agregar");
@@ -98,60 +105,46 @@ public class GestionCategoriasScreen extends JFrame {
         btnEliminarCategoria.setForeground(Color.WHITE);
         buttonPanel.add(btnEliminarCategoria);
 
+        btnVerRecetasCategoria = new JButton("Ver Recetas de Categoría");
+        btnVerRecetasCategoria.setBackground(new Color(255, 140, 0));
+        btnVerRecetasCategoria.setForeground(Color.WHITE);
+        btnVerRecetasCategoria.setFont(new Font("Arial", Font.BOLD, 12));
+        btnVerRecetasCategoria.setEnabled(false);
+        buttonPanel.add(btnVerRecetasCategoria);
+
         inputAndButtonsPanel.add(inputPanel, BorderLayout.NORTH);
         inputAndButtonsPanel.add(buttonPanel, BorderLayout.CENTER);
 
-        mainPanel.add(inputAndButtonsPanel, BorderLayout.SOUTH); // Añadir el nuevo panel al SUR del mainPanel
+        JPanel bottomControlsPanel = new JPanel();
+        bottomControlsPanel.setLayout(new BoxLayout(bottomControlsPanel, BoxLayout.Y_AXIS));
+        bottomControlsPanel.setBackground(new Color(255, 255, 220));
+        bottomControlsPanel.setBorder(new EmptyBorder(0, 10, 10, 10));
 
-        // =====================================================================
-        // FIN DE LA CORRECCIÓN
-        // =====================================================================
+        bottomControlsPanel.add(inputAndButtonsPanel);
+        bottomControlsPanel.add(Box.createVerticalStrut(10));
 
-
-        // Botón "Atrás" (se mantiene al final, fuera del inputAndButtonsPanel)
         JButton atrasButton = new JButton("ATRÁS");
         atrasButton.setBackground(Color.DARK_GRAY);
         atrasButton.setForeground(Color.WHITE);
         atrasButton.setFont(new Font("Arial", Font.BOLD, 14));
-        atrasButton.addActionListener(e -> irAtras());
+        // MODIFICADO: Llama al método de la ventana padre para cambiar de panel
+        atrasButton.addActionListener(e -> ventanaPadre.mostrarPanel("principal"));
 
         JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         southPanel.setBackground(new Color(255, 255, 220));
         southPanel.add(atrasButton);
-        mainPanel.add(southPanel, BorderLayout.SOUTH); // El botón de Atrás se añade al SOUTH del mainPanel, lo cual está bien.
-                                                      // Reorganizamos para que inputAndButtonsPanel esté en BorderLayout.SOUTH del mainPanel,
-                                                      // y luego southPanel (con el botón Atrás) se añade después de inputAndButtonsPanel.
-                                                      // Para que el botón ATRÁS esté debajo de los botones de CRUD:
+        bottomControlsPanel.add(southPanel);
 
-        // Nueva estructura para la parte inferior:
-        JPanel bottomControlsPanel = new JPanel();
-        bottomControlsPanel.setLayout(new BoxLayout(bottomControlsPanel, BoxLayout.Y_AXIS));
-        bottomControlsPanel.setBackground(new Color(255, 255, 220));
-        bottomControlsPanel.setBorder(new EmptyBorder(0, 10, 10, 10)); // Más espacio
-
-        bottomControlsPanel.add(inputAndButtonsPanel); // Primero los campos y botones CRUD
-        bottomControlsPanel.add(Box.createVerticalStrut(10)); // Espacio vertical
-        bottomControlsPanel.add(southPanel); // Luego el botón ATRÁS
-
-        mainPanel.add(bottomControlsPanel, BorderLayout.SOUTH); // Añadir el panel combinado al SUR del mainPanel
-
-
-        add(mainPanel);
+        add(bottomControlsPanel, BorderLayout.SOUTH); // Añadido al JPanel (este)
 
         // Acciones de los botones de Categorías
         btnAgregarCategoria.addActionListener(e -> agregarCategoria());
         btnEditarCategoria.addActionListener(e -> editarCategoria());
         btnEliminarCategoria.addActionListener(e -> eliminarCategoria());
+        btnVerRecetasCategoria.addActionListener(e -> verRecetasDeCategoria());
     }
 
-    private void irAtras() {
-        if (ventanaAnterior != null) {
-            ventanaAnterior.setVisible(true);
-        }
-        dispose();
-    }
-
-    // --- Métodos CRUD para Categorías (estos ya estaban correctos) ---
+    // ELIMINADO: irAtras() ya que ahora lo maneja el padre
 
     private void cargarCategoriasTabla() {
         categoriaTableModel.setRowCount(0);
@@ -280,11 +273,6 @@ public class GestionCategoriasScreen extends JFrame {
 
                 Categoria categoriaAEliminar = session.get(Categoria.class, idCategoria);
                 if (categoriaAEliminar != null) {
-                    // Antes de eliminar la categoría, debemos asegurarnos de que no esté asociada a ninguna receta.
-                    // Si está asociada, la eliminación fallará o causará un error de integridad referencial.
-                    // Podemos removerla de las recetas asociadas primero, o simplemente informar al usuario.
-                    // Por ahora, el error de la DB ya lo manejará.
-
                     session.delete(categoriaAEliminar);
                     transaction.commit();
                     JOptionPane.showMessageDialog(this, "Categoría eliminada exitosamente.");
@@ -297,7 +285,6 @@ public class GestionCategoriasScreen extends JFrame {
                 if (transaction != null) {
                     transaction.rollback();
                 }
-                // Mensaje más útil si la eliminación falla por FK
                 if (ex.getMessage() != null && ex.getMessage().contains("Cannot delete or update a parent row: a foreign key constraint fails")) {
                     JOptionPane.showMessageDialog(this, "No se pudo eliminar la categoría. Probablemente esté asociada a una o más recetas.", "Error de Eliminación", JOptionPane.ERROR_MESSAGE);
                 } else {
@@ -316,5 +303,24 @@ public class GestionCategoriasScreen extends JFrame {
         categoriaIdField.setText("");
         categoriaNombreField.setText("");
         categoriaTable.clearSelection();
+        btnVerRecetasCategoria.setEnabled(false);
+    }
+
+    private void verRecetasDeCategoria() {
+        int selectedRow = categoriaTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione una categoría para ver sus recetas.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Integer idCategoria = (Integer) categoriaTableModel.getValueAt(selectedRow, 0);
+        String nombreCategoria = (String) categoriaTableModel.getValueAt(selectedRow, 1);
+
+        Categoria categoriaSeleccionada = new Categoria();
+        categoriaSeleccionada.setIdCategoria(idCategoria);
+        categoriaSeleccionada.setNombreCategoria(nombreCategoria);
+
+        // AÑADIDO: Llama al método del padre para mostrar el panel de recetas con filtro
+        ventanaPadre.mostrarPanel("verRecetas", categoriaSeleccionada);
     }
 }
