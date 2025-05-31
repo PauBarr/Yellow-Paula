@@ -4,20 +4,34 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.SessionFactory;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 import java.awt.Font;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.RoundRectangle2D;
+import java.awt.BorderLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+// <<<<<<<<<<<<<<<<<<<<<<<<< IMPORTACIONES FALTANTES >>>>>>>>>>>>>>>>>>>>>>>>>
+import java.awt.FlowLayout; // Importación agregada
+import java.awt.GridLayout; // Importación agregada
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 public class IngresoIngrediente extends JFrame {
 
     private JTextField articuloField;
-    private JRadioButton unidadRadio; // Representará la unidad en la que se compró
+    private JRadioButton unidadRadio;
     private JRadioButton litrosRadio;
     private JRadioButton kilogramosRadio;
-    private JRadioButton especialRadio; // Podría ser "Otros" o algo más genérico
-    private JTextField cantidadDeCompraField; // Nuevo: Cantidad total del paquete/unidad
-    private JTextField costoDeCompraField; // Nuevo: Costo total del paquete/unidad
+    private JRadioButton especialRadio;
+    private JTextField cantidadDeCompraField;
+    private JTextField costoDeCompraField;
 
     private JButton ingresarButton;
     private JButton salirButton;
@@ -40,40 +54,85 @@ public class IngresoIngrediente extends JFrame {
 
     private void initComponents() {
         setTitle("Ingreso/Actualización de Ingredientes");
-        setSize(450, 450);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(null);
+        
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(new Color(255, 255, 220));
 
-        JLabel tituloLabel = new JLabel("GESTIÓN DE INGREDIENTES");
-        tituloLabel.setBounds(20, 10, 400, 30);
-        tituloLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        add(tituloLabel);
+        // --- Panel Superior para el Título ---
+        JPanel panelSuperior = new JPanel();
+        panelSuperior.setBackground(new Color(255, 255, 220));
+        panelSuperior.setBorder(new EmptyBorder(20, 0, 10, 0));
+        JLabel tituloLabel = new JLabel("GESTIÓN DE INGREDIENTES", SwingConstants.CENTER);
+        tituloLabel.setFont(new Font("Arial", Font.BOLD, 28));
+        tituloLabel.setForeground(new Color(60, 60, 60));
+        panelSuperior.add(tituloLabel);
+        add(panelSuperior, BorderLayout.NORTH);
 
-        JLabel selectorLabel = new JLabel("Seleccionar Ingrediente:");
-        selectorLabel.setBounds(20, 50, 150, 25);
-        add(selectorLabel);
+        // --- Panel Central para Formularios ---
+        JPanel panelCentral = new JPanel(new GridBagLayout());
+        panelCentral.setBackground(new Color(255, 255, 220));
+        panelCentral.setBorder(new EmptyBorder(10, 50, 10, 50));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Fila 0: Selector de Ingrediente
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panelCentral.add(new JLabel("Seleccionar Ingrediente:"), gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
         selectorIngrediente = new JComboBox<>();
-        selectorIngrediente.setBounds(180, 50, 200, 25);
+        selectorIngrediente.setPreferredSize(new Dimension(300, 30));
         selectorIngrediente.addActionListener(e -> cargarDatosIngredienteSeleccionado());
-        add(selectorIngrediente);
+        selectorIngrediente.setBackground(Color.WHITE);
+        panelCentral.add(selectorIngrediente, gbc);
+        gbc.gridwidth = 1;
 
-        JLabel articuloLabel = new JLabel("Artículo (Nombre):");
-        articuloLabel.setBounds(20, 90, 150, 25);
+        // Fila 1: Artículo (Nombre)
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panelCentral.add(new JLabel("Artículo (Nombre):"), gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
         articuloField = new JTextField();
-        articuloField.setBounds(180, 90, 200, 25);
+        articuloField.setPreferredSize(new Dimension(300, 28));
+        panelCentral.add(articuloField, gbc);
+        gbc.gridwidth = 1;
 
-        JLabel unidadLabel = new JLabel("Unidad de Compra:"); // Texto actualizado
-        unidadLabel.setBounds(20, 130, 150, 25); // Ampliado el espacio para el label
+        // Fila 2: Unidad de Compra (Radio Buttons)
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        panelCentral.add(new JLabel("Unidad de Compra:"), gbc);
 
+        JPanel radioPanel = new JPanel(new GridLayout(4, 1));
+        radioPanel.setBackground(new Color(255, 255, 220));
         unidadRadio = new JRadioButton("Unidad");
-        unidadRadio.setBounds(40, 160, 100, 25);
         litrosRadio = new JRadioButton("Litros");
-        litrosRadio.setBounds(40, 190, 100, 25);
         kilogramosRadio = new JRadioButton("Kilogramos");
-        kilogramosRadio.setBounds(40, 220, 100, 25);
-        especialRadio = new JRadioButton("Especial/Otros"); // Texto actualizado
-        especialRadio.setBounds(40, 250, 120, 25); // Ampliado el espacio
+        especialRadio = new JRadioButton("Especial/Otros");
+
+        unidadRadio.setBackground(new Color(255, 255, 220));
+        litrosRadio.setBackground(new Color(255, 255, 220));
+        kilogramosRadio.setBackground(new Color(255, 255, 220));
+        especialRadio.setBackground(new Color(255, 255, 220));
+        
+        Font radioFont = new Font("Segoe UI", Font.PLAIN, 14);
+        unidadRadio.setFont(radioFont);
+        litrosRadio.setFont(radioFont);
+        kilogramosRadio.setFont(radioFont);
+        especialRadio.setFont(radioFont);
+
+        radioPanel.add(unidadRadio);
+        radioPanel.add(litrosRadio);
+        radioPanel.add(kilogramosRadio);
+        radioPanel.add(especialRadio);
 
         unidadGroup = new ButtonGroup();
         unidadGroup.add(unidadRadio);
@@ -81,50 +140,85 @@ public class IngresoIngrediente extends JFrame {
         unidadGroup.add(kilogramosRadio);
         unidadGroup.add(especialRadio);
 
-        // NUEVO: Cantidad de compra (ej. 1000 para 1kg, 1 para 1 banana)
-        JLabel cantidadDeCompraLabel = new JLabel("Cantidad de Compra:");
-        cantidadDeCompraLabel.setBounds(180, 160, 150, 25);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridheight = 4;
+        panelCentral.add(radioPanel, gbc);
+        gbc.gridheight = 1;
+
+        // Fila 3: Cantidad de Compra (al lado de los radios)
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        panelCentral.add(new JLabel("Cantidad de Compra:"), gbc);
+        gbc.gridy = 3;
         cantidadDeCompraField = new JTextField();
-        cantidadDeCompraField.setBounds(330, 160, 80, 25); // Ajustado el ancho
+        cantidadDeCompraField.setPreferredSize(new Dimension(100, 28));
+        panelCentral.add(cantidadDeCompraField, gbc);
 
-        // NUEVO: Costo de compra (ej. 5600 por el paquete, 200 por la banana)
-        JLabel costoDeCompraLabel = new JLabel("Costo Total de Compra:");
-        costoDeCompraLabel.setBounds(180, 200, 150, 25);
+        // Fila 4: Costo Total de Compra (al lado de los radios)
+        gbc.gridy = 4;
+        panelCentral.add(new JLabel("Costo Total de Compra:"), gbc);
+        gbc.gridy = 5;
         costoDeCompraField = new JTextField();
-        costoDeCompraField.setBounds(330, 200, 80, 25); // Ajustado el ancho
+        costoDeCompraField.setPreferredSize(new Dimension(100, 28));
+        panelCentral.add(costoDeCompraField, gbc);
 
-        ingresarButton = new JButton("GUARDAR / ACTUALIZAR");
-        ingresarButton.setBounds(20, 300, 200, 35);
+        add(panelCentral, BorderLayout.CENTER);
 
-        limpiarButton = new JButton("NUEVO / LIMPIAR");
-        limpiarButton.setBounds(230, 300, 180, 35);
+        // --- Panel Inferior para Botones ---
+        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        panelInferior.setBackground(new Color(255, 255, 220));
+        panelInferior.setBorder(new EmptyBorder(10, 0, 10, 0));
 
-        salirButton = new JButton("SALIR");
-        salirButton.setBounds(20, 350, 150, 35);
+        ingresarButton = createRoundedButton("GUARDAR / ACTUALIZAR", new Color(85, 107, 47));
+        limpiarButton = createRoundedButton("NUEVO / LIMPIAR", Color.DARK_GRAY);
+        verIngredientesButton = createRoundedButton("VER INGREDIENTES", new Color(70, 130, 180));
+        salirButton = createRoundedButton("SALIR", new Color(178, 34, 34));
 
-        verIngredientesButton = new JButton("VER INGREDIENTES");
-        verIngredientesButton.setBounds(180, 350, 230, 35);
+        panelInferior.add(ingresarButton);
+        panelInferior.add(limpiarButton);
+        panelInferior.add(verIngredientesButton);
+        panelInferior.add(salirButton);
 
+        add(panelInferior, BorderLayout.SOUTH);
+
+        // Listener de acciones
         ingresarButton.addActionListener(e -> guardarOActualizarIngrediente());
         limpiarButton.addActionListener(e -> limpiarCampos());
         salirButton.addActionListener(e -> salir());
         verIngredientesButton.addActionListener(e -> verIngredientes());
+    }
 
-        add(articuloLabel);
-        add(articuloField);
-        add(unidadLabel);
-        add(unidadRadio);
-        add(litrosRadio);
-        add(kilogramosRadio);
-        add(especialRadio);
-        add(cantidadDeCompraLabel); // Agregado
-        add(cantidadDeCompraField); // Agregado
-        add(costoDeCompraLabel); // Agregado
-        add(costoDeCompraField); // Agregado
-        add(ingresarButton);
-        add(limpiarButton);
-        add(salirButton);
-        add(verIngredientesButton);
+    private JButton createRoundedButton(String text, Color bgColor) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 15, 15));
+                super.paintComponent(g);
+                g2.dispose();
+            }
+
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 15, 15));
+                g2.dispose();
+            }
+        };
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setOpaque(false);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setPreferredSize(new Dimension(180, 45));
+        return button;
     }
 
     private void cargarIngredientesEnSelector() {
@@ -145,10 +239,8 @@ public class IngresoIngrediente extends JFrame {
         ingredienteActual = (Ingrediente) selectorIngrediente.getSelectedItem();
         if (ingredienteActual != null) {
             articuloField.setText(ingredienteActual.getNombre());
-            // Aquí pueden ser null si los datos viejos no tienen valor para estas nuevas columnas
-            // Hay que usar String.valueOf() que maneja nulls o asegurar que los getters devuelvan 0.0
-            cantidadDeCompraField.setText(String.valueOf(ingredienteActual.getCantidadDeCompra())); //
-            costoDeCompraField.setText(String.valueOf(ingredienteActual.getCostoDeCompra())); //
+            cantidadDeCompraField.setText(String.valueOf(ingredienteActual.getCantidadDeCompra()));
+            costoDeCompraField.setText(String.valueOf(ingredienteActual.getCostoDeCompra()));
 
             unidadGroup.clearSelection();
             String tipo = ingredienteActual.getTipoPesoLt();
@@ -167,15 +259,11 @@ public class IngresoIngrediente extends JFrame {
     }
 
     private void guardarOActualizarIngrediente() {
-        String producto = articuloField.getText();
+        String producto = articuloField.getText().trim();
 
-        System.out.println("Valor de 'producto' desde el campo: '" + producto + "'");
-        System.out.println("Es 'producto' vacío? " + producto.isEmpty());
-        System.out.println("Es 'producto' solo espacios? " + producto.trim().isEmpty());
-
-        String tipo = getTipoSeleccionado(); // ¡CORREGIDO: Ahora esta línea NO está duplicada!
-        String costoDeCompraText = costoDeCompraField.getText();
-        String cantidadDeCompraText = cantidadDeCompraField.getText();
+        String tipo = getTipoSeleccionado();
+        String costoDeCompraText = costoDeCompraField.getText().trim();
+        String cantidadDeCompraText = cantidadDeCompraField.getText().trim();
 
         if (producto.isEmpty() || tipo == null || costoDeCompraText.isEmpty() || cantidadDeCompraText.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Todos los campos (Artículo, Unidad, Cantidad de Compra, Costo de Compra) son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -192,25 +280,38 @@ public class IngresoIngrediente extends JFrame {
                 session = sessionFactory.openSession();
                 transaction = session.beginTransaction();
 
-                System.out.println("DEBUG: Intentando guardar/actualizar ingrediente: " + (ingredienteActual == null ? "NUEVO" : "EXISTENTE"));
-                System.out.println("DEBUG: Nombre: " + producto + ", Tipo: " + tipo + ", Cantidad: " + cantidadDeCompra + ", Costo: " + costoDeCompra);
-
                 if (ingredienteActual == null) {
+                    Ingrediente existente = (Ingrediente) session.createQuery("FROM Ingrediente WHERE nombre = :nombre")
+                                                                  .setParameter("nombre", producto)
+                                                                  .uniqueResult();
+                    if (existente != null) {
+                        JOptionPane.showMessageDialog(this, "Ya existe un ingrediente con este nombre. Por favor, actualice el existente o use otro nombre.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                        transaction.rollback();
+                        return;
+                    }
+
                     Ingrediente nuevoIngrediente = new Ingrediente(producto, tipo, cantidadDeCompra, costoDeCompra);
                     session.save(nuevoIngrediente);
-                    System.out.println("DEBUG: Se llamó a session.save() para el nuevo ingrediente.");
                     JOptionPane.showMessageDialog(this, "Nuevo ingrediente ingresado exitosamente.");
                 } else {
+                    Ingrediente existenteConOtroId = (Ingrediente) session.createQuery("FROM Ingrediente WHERE nombre = :nombre AND id != :id")
+                                                                          .setParameter("nombre", producto)
+                                                                          .setParameter("id", ingredienteActual.getId())
+                                                                          .uniqueResult();
+                    if (existenteConOtroId != null) {
+                        JOptionPane.showMessageDialog(this, "Ya existe otro ingrediente con este nombre. Por favor, elija un nombre único.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                        transaction.rollback();
+                        return;
+                    }
+
                     ingredienteActual.setNombre(producto);
                     ingredienteActual.setTipoPesoLt(tipo);
                     ingredienteActual.setCantidadDeCompra(cantidadDeCompra);
                     ingredienteActual.setCostoDeCompra(costoDeCompra);
-                    session.merge(ingredienteActual); // ¡CORREGIDO: esta línea NO está duplicada!
-                    System.out.println("DEBUG: Se llamó a session.merge() para el ingrediente existente.");
+                    session.merge(ingredienteActual);
                     JOptionPane.showMessageDialog(this, "Ingrediente actualizado exitosamente.");
                 }
                 transaction.commit();
-                System.out.println("DEBUG: La transacción se ha hecho commit.");
 
                 cargarIngredientesEnSelector();
                 limpiarCampos();
@@ -218,14 +319,12 @@ public class IngresoIngrediente extends JFrame {
             } catch (Exception ex) {
                 if (transaction != null) {
                     transaction.rollback();
-                    System.err.println("DEBUG: La transacción se ha hecho rollback.");
                 }
                 JOptionPane.showMessageDialog(this, "Error al guardar/actualizar en la base de datos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             } finally {
                 if (session != null) {
                     session.close();
-                    System.out.println("DEBUG: La sesión de Hibernate se ha cerrado.");
                 }
             }
         } catch (NumberFormatException ex) {
@@ -255,7 +354,6 @@ public class IngresoIngrediente extends JFrame {
         return null;
     }
 
-    // Método robusto para parsear números (copiado de PantallaCostos)
     private double parsearNumero(String text) {
         if (text == null || text.trim().isEmpty() || text.trim().equals("-")) {
             return 0.0;

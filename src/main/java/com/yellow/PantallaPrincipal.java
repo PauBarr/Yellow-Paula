@@ -6,16 +6,19 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Font;
 import java.awt.BorderLayout;
-import java.awt.Image; // Para escalar iconos
+import java.awt.Image;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.ImageIcon;
-import javax.swing.BorderFactory; // Para el espaciado y bordes
+import javax.swing.BorderFactory;
 import org.hibernate.SessionFactory;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.RoundRectangle2D; // Importación correcta para RoundRectangle2D
 
 public class PantallaPrincipal extends JFrame {
 
@@ -27,70 +30,70 @@ public class PantallaPrincipal extends JFrame {
 
         // Configuración del JFrame
         setTitle("Pantalla Principal - Yellow");
-        setSize(900, 600); // Tamaño fijo como PantallaCostos
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        // Usar BorderLayout para el JFrame para colocar el eslogan y la configuración arriba
         setLayout(new BorderLayout());
 
         // --- Panel Superior para Eslogan y Configuración (NORTH) ---
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(new Color(255, 255, 220)); // Fondo amarillo muy claro
-        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Espaciado
+        topPanel.setBackground(new Color(255, 255, 220));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Eslogan en el centro del topPanel
         JLabel sloganLabel = new JLabel("Tus costos en un click", SwingConstants.CENTER);
-        sloganLabel.setFont(new Font("Arial", Font.BOLD | Font.ITALIC, 24));
+        // Intentamos establecer la fuente, si no se encuentra, Swing usará una por defecto.
+        sloganLabel.setFont(new Font("Comic Sans MS", Font.BOLD | Font.ITALIC, 24));
         sloganLabel.setForeground(new Color(60, 60, 60));
         topPanel.add(sloganLabel, BorderLayout.CENTER);
 
         // Botón/Icono de Configuración en la esquina superior derecha (EAST del topPanel)
-        JButton btnConfiguracion = createIconButton("/icons/settings_icon.png");
+        // Usamos el nuevo método para el botón de icono redondeado
+        JButton btnConfiguracion = createRoundedIconButton("/icons/settings_icon.png");
         btnConfiguracion.setToolTipText("Configuración");
         btnConfiguracion.addActionListener(e -> {
-            // Abrir la nueva ventana de Configuración
             PantallaConfiguracion configScreen = new PantallaConfiguracion(this, sessionFactory);
             configScreen.setVisible(true);
-            dispose(); // Cierra la pantalla principal si quieres que solo se vea la configuración
+            dispose();
         });
-        JPanel configPanel = new JPanel(); // Para alinear a la derecha
-        configPanel.setBackground(new Color(255, 255, 220)); // Mismo fondo que topPanel
+        JPanel configPanel = new JPanel();
+        configPanel.setBackground(new Color(255, 255, 220));
         configPanel.add(btnConfiguracion);
         topPanel.add(configPanel, BorderLayout.EAST);
 
-        add(topPanel, BorderLayout.NORTH); // Añadir el topPanel al JFrame
+        add(topPanel, BorderLayout.NORTH);
 
         // --- Panel Central para Logo y Botones de Funcionalidad ---
         panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(255, 255, 220)); // Fondo amarillo muy claro
+        panel.setBackground(new Color(255, 255, 220));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new java.awt.Insets(10, 10, 10, 10); // Espaciado entre componentes
-        gbc.anchor = GridBagConstraints.CENTER; // Centrar los componentes
+        gbc.insets = new java.awt.Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.CENTER;
 
         // ---------------------- LOGO YELLOW ----------------------
         try {
             ImageIcon logoIcon = new ImageIcon(getClass().getResource("/images/yellow_logo.png"));
             if (logoIcon.getImageLoadStatus() == java.awt.MediaTracker.ERRORED) {
                 JLabel textLogo = new JLabel("YELLOW");
-                textLogo.setFont(new Font("Arial", Font.BOLD, 48));
+                textLogo.setFont(new Font("Ink Free", Font.BOLD, 48));
                 textLogo.setForeground(new Color(255, 200, 0));
                 gbc.gridx = 0;
                 gbc.gridy = 0;
-                gbc.gridwidth = 3; // Ocupa el ancho de los 3 botones para centrarlo
+                gbc.gridwidth = 3;
                 panel.add(textLogo, gbc);
             } else {
                 JLabel logoLabel = new JLabel(logoIcon);
                 gbc.gridx = 0;
                 gbc.gridy = 0;
-                gbc.gridwidth = 3; // Ocupa el ancho de los 3 botones para centrarlo
+                gbc.gridwidth = 3;
                 panel.add(logoLabel, gbc);
             }
         } catch (Exception e) {
             System.err.println("Error al cargar el logo: " + e.getMessage());
             JLabel textLogo = new JLabel("YELLOW");
-            textLogo.setFont(new Font("Arial", Font.BOLD, 48));
+            textLogo.setFont(new Font("Ink Free", Font.BOLD, 48));
             textLogo.setForeground(new Color(255, 200, 0));
             gbc.gridx = 0;
             gbc.gridy = 0;
@@ -100,22 +103,20 @@ public class PantallaPrincipal extends JFrame {
         // ---------------------------------------------------------
 
         // Resetear gbc para los botones de funcionalidad
-        gbc.gridy = 1; // Fila para los botones
-        gbc.gridwidth = 1; // Cada botón ocupa una columna
-        gbc.fill = GridBagConstraints.NONE; // No expandir los botones
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
 
-        // Botones de funcionalidad principales
-        JButton btnNuevoProyecto = createStyledButton("Nuevo Proyecto", "/icons/new_project_icon.png");
-        JButton btnIngresoIngredientes = createStyledButton("Ingredientes", "/icons/ingredients_icon.png");
-        JButton btnNotas = createStyledButton("Notas", "/icons/notes_icon.png");
+        // Botones de funcionalidad principales, usando el método para botones redondeados
+        JButton btnNuevoProyecto = createRoundedStyledButton("Nuevo Proyecto", "/icons/new_project_icon.png");
+        JButton btnIngresoIngredientes = createRoundedStyledButton("Ingredientes", "/icons/ingredients_icon.png");
+        JButton btnNotas = createRoundedStyledButton("Notas", "/icons/notes_icon.png");
 
-        // Establecer acciones (asegúrate de que estas clases y constructores existan y sean correctos)
+        // Establecer acciones
         btnNuevoProyecto.addActionListener(e -> {
-            // MODIFICADO: Abrir IngresoReceta (que ahora es el JFrame principal para la gestión de recetas)
-            // Se le pasa 'this' (la PantallaPrincipal actual) como la ventana anterior
             IngresoReceta ingresoReceta = new IngresoReceta(this, sessionFactory);
             ingresoReceta.setVisible(true);
-            this.setVisible(false); // Oculta PantallaPrincipal
+            this.setVisible(false);
         });
 
         btnIngresoIngredientes.addActionListener(e -> {
@@ -130,30 +131,59 @@ public class PantallaPrincipal extends JFrame {
             dispose();
         });
 
-
         // Añadir botones al panel
         gbc.gridx = 0; panel.add(btnNuevoProyecto, gbc);
         gbc.gridx = 1; panel.add(btnIngresoIngredientes, gbc);
         gbc.gridx = 2; panel.add(btnNotas, gbc);
 
-        // Agregar el panel central al JFrame
         add(panel, BorderLayout.CENTER);
     }
 
-    // Método auxiliar para crear y estilizar botones con iconos
-    private JButton createStyledButton(String text, String iconPath) {
-        JButton button = new JButton(text);
-        button.setPreferredSize(new Dimension(150, 60)); // Tamaño más grande para los botones
-        button.setBackground(Color.DARK_GRAY); // Color de fondo gris oscuro
-        button.setForeground(Color.WHITE); // Color de texto blanco
-        button.setFont(new Font("Arial", Font.BOLD, 14)); // Fuente negrita y tamaño adecuado
+    // Método auxiliar para crear y estilizar botones redondeados con iconos
+    private JButton createRoundedStyledButton(String text, String iconPath) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Dibujar el fondo redondeado
+                g2.setColor(getBackground());
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 20, 20));
+
+                // Es importante llamar a super.paintComponent *después* de dibujar el fondo
+                // para que el texto y el icono del botón se pinten encima de nuestro fondo redondeado.
+                super.paintComponent(g);
+                g2.dispose();
+            }
+
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Dibujar el borde redondeado
+                g2.setColor(getForeground().darker()); // Color del borde, un poco más oscuro que el texto
+                g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 20, 20));
+
+                g2.dispose();
+                // No llamar a super.paintBorder(g) para evitar el borde predeterminado de Swing
+            }
+        };
+
+        button.setPreferredSize(new Dimension(180, 80));
+        button.setBackground(new Color(85, 107, 47)); // Verde oliva
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 16)); // Fuente para los botones
+        button.setOpaque(false); // Indispensable para que paintComponent pueda dibujar un fondo personalizado
+        button.setContentAreaFilled(false); // No rellenar el área de contenido por defecto
 
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource(iconPath));
             if (icon.getImageLoadStatus() == java.awt.MediaTracker.ERRORED) {
                  System.err.println("Error al cargar el icono: " + iconPath);
             } else {
-                Image scaledImage = icon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+                Image scaledImage = icon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
                 button.setIcon(new ImageIcon(scaledImage));
                 button.setHorizontalTextPosition(SwingConstants.CENTER);
                 button.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -164,39 +194,55 @@ public class PantallaPrincipal extends JFrame {
         return button;
     }
 
-    // Método auxiliar para crear un botón solo con icono (para Configuración)
-    private JButton createIconButton(String iconPath) {
-        JButton button = new JButton();
-        button.setPreferredSize(new Dimension(40, 40)); // Tamaño pequeño para el icono
-        button.setOpaque(false); // Hacer el botón transparente
-        button.setContentAreaFilled(false); // Quitar el relleno del área de contenido
-        button.setBorderPainted(false); // Quitar el borde
+    // Método auxiliar para crear un botón de icono redondeado (para Configuración)
+    private JButton createRoundedIconButton(String iconPath) {
+        JButton button = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Dibujar el fondo redondeado
+                g2.setColor(new Color(200, 200, 200, 150)); // Un gris semi-transparente para el fondo del icono
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 15, 15));
+
+                super.paintComponent(g);
+                g2.dispose();
+            }
+
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Dibujar el borde redondeado
+                g2.setColor(Color.GRAY); // Borde gris
+                g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 15, 15));
+
+                g2.dispose();
+                // No llamar a super.paintBorder(g)
+            }
+        };
+        button.setPreferredSize(new Dimension(50, 50));
+        button.setOpaque(false);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false); // No queremos el borde por defecto de Swing
 
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource(iconPath));
             if (icon.getImageLoadStatus() == java.awt.MediaTracker.ERRORED) {
                  System.err.println("Error al cargar el icono de configuración: " + iconPath);
-                 button.setText("Conf."); // Texto alternativo si el icono falla
+                 button.setText("Conf.");
+                 button.setFont(new Font("Arial", Font.PLAIN, 10));
             } else {
-                Image scaledImage = icon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+                Image scaledImage = icon.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
                 button.setIcon(new ImageIcon(scaledImage));
             }
         } catch (Exception e) {
             System.err.println("No se pudo cargar el icono de configuración. Ruta: " + iconPath + ". Error: " + e.getMessage());
-            button.setText("Conf."); // Texto alternativo si el icono falla
+            button.setText("Conf.");
+            button.setFont(new Font("Arial", Font.PLAIN, 10));
         }
         return button;
     }
-
-    // El método main para probar (solo para pruebas directas de la pantalla, no para la ejecución principal de la app)
-    /*
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            // Debes pasar un SessionFactory real aquí si quieres que funcione correctamente.
-            // Para una prueba visual simple, puedes pasar null, pero las funcionalidades fallarán.
-            PantallaPrincipal pantalla = new PantallaPrincipal(null);
-            pantalla.setVisible(true);
-        });
-    }
-    */
 }
