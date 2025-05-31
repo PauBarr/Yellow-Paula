@@ -9,7 +9,7 @@ import javax.swing.event.TableModelEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent; // Necesitamos importar KeyEvent
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -164,7 +164,8 @@ public class PantallaCostos extends JFrame {
         panelCostos.add(etiquetaPrecioFinal);
         panelCostos.add(campoPrecioFinal);
 
-        JPanel panelBotonesInferior = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        // MODIFICACIÓN APLICADA AQUÍ: CAMBIO DE FlowLayout A GridLayout
+        JPanel panelBotonesInferior = new JPanel(new GridLayout(2, 4, 10, 10)); // 2 filas, 4 columnas
         panelBotonesInferior.setBackground(new Color(255, 255, 220));
 
         JButton botonRecalcularPrecio = new JButton("RECALCULAR PRECIO FINAL");
@@ -253,9 +254,6 @@ public class PantallaCostos extends JFrame {
         actualizarPrecioFinal();
         agregarFilaATabla();
     }
-
-    // ... el resto de los métodos de PantallaCostos (parsearNumero, regresarAPantallaPrincipal, etc.)
-    // Estos métodos no necesitan cambios adicionales.
 
     private void agregarDocumentListener(JTextField campoTexto) {
         campoTexto.getDocument().addDocumentListener(new DocumentListener() {
