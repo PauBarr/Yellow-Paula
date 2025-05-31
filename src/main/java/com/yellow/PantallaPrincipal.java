@@ -1,3 +1,4 @@
+// src/main/java/com/yellow/PantallaPrincipal.java
 package com.yellow;
 
 import java.awt.Color;
@@ -8,6 +9,7 @@ import java.awt.Font;
 import java.awt.BorderLayout;
 import java.awt.Image;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -18,7 +20,8 @@ import org.hibernate.SessionFactory;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.geom.RoundRectangle2D; // Importación correcta para RoundRectangle2D
+import java.awt.geom.RoundRectangle2D; 
+import javax.swing.AbstractButton;
 
 public class PantallaPrincipal extends JFrame {
 
@@ -36,31 +39,70 @@ public class PantallaPrincipal extends JFrame {
 
         setLayout(new BorderLayout());
 
-        // --- Panel Superior para Eslogan y Configuración (NORTH) ---
+        // --- Panel Superior para Eslogan y Botón "Y" (NORTH) ---
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(new Color(255, 255, 220));
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Eslogan en el centro del topPanel
         JLabel sloganLabel = new JLabel("Tus costos en un click", SwingConstants.CENTER);
-        // Intentamos establecer la fuente, si no se encuentra, Swing usará una por defecto.
         sloganLabel.setFont(new Font("Comic Sans MS", Font.BOLD | Font.ITALIC, 24));
         sloganLabel.setForeground(new Color(60, 60, 60));
         topPanel.add(sloganLabel, BorderLayout.CENTER);
 
-        // Botón/Icono de Configuración en la esquina superior derecha (EAST del topPanel)
-        // Usamos el nuevo método para el botón de icono redondeado
-        JButton btnConfiguracion = createRoundedIconButton("/icons/settings_icon.png");
-        btnConfiguracion.setToolTipText("Configuración");
-        btnConfiguracion.addActionListener(e -> {
-            PantallaConfiguracion configScreen = new PantallaConfiguracion(this, sessionFactory);
-            configScreen.setVisible(true);
+        // Botón "Y" en la esquina superior derecha (EAST del topPanel)
+        JButton btnAcercaDe = new JButton("Y"); // Texto simple 'Y'
+        btnAcercaDe.setPreferredSize(new Dimension(50, 50));
+        btnAcercaDe.setFont(new Font("Arial", Font.BOLD, 24)); // Fuente grande para la 'Y'
+        btnAcercaDe.setBackground(new Color(255, 200, 0)); // Color amarillo
+        btnAcercaDe.setForeground(Color.WHITE); // Texto blanco
+        btnAcercaDe.setFocusPainted(false);
+        btnAcercaDe.setBorderPainted(false);
+        btnAcercaDe.setOpaque(true); // Necesario para que el color de fondo se vea
+        btnAcercaDe.setContentAreaFilled(true); // Asegurarse de que el área de contenido se rellene
+
+        // Estilo redondeado para el botón "Y"
+        btnAcercaDe.setBorder(BorderFactory.createEmptyBorder()); // Eliminar borde predeterminado
+        btnAcercaDe.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+            @Override
+            public void installUI(JComponent c) {
+                super.installUI(c);
+                AbstractButton button = (AbstractButton) c;
+                button.setRolloverEnabled(true);
+                button.setFocusPainted(false);
+                button.setBorderPainted(false);
+            }
+
+            @Override
+            public void paint(Graphics g, JComponent c) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                JButton button = (JButton) c;
+                Color background = button.getBackground();
+                if (button.getModel().isRollover()) {
+                    background = background.darker(); // Oscurecer al pasar el ratón
+                }
+                g2.setColor(background);
+                g2.fill(new RoundRectangle2D.Double(0, 0, button.getWidth() - 1, button.getHeight() - 1, 15, 15)); // Redondeo
+
+                // Dibujar texto e icono
+                super.paint(g2, c);
+                g2.dispose();
+            }
+        });
+
+
+        btnAcercaDe.addActionListener(e -> {
+            // MODIFICADO: Ahora abre PantallaConfiguracion sin especificar pestaña, ya que es solo "Acerca de"
+            PantallaConfiguracion aboutScreen = new PantallaConfiguracion(this, sessionFactory);
+            aboutScreen.setVisible(true);
             dispose();
         });
-        JPanel configPanel = new JPanel();
-        configPanel.setBackground(new Color(255, 255, 220));
-        configPanel.add(btnConfiguracion);
-        topPanel.add(configPanel, BorderLayout.EAST);
+        JPanel aboutButtonPanel = new JPanel();
+        aboutButtonPanel.setBackground(new Color(255, 255, 220));
+        aboutButtonPanel.add(btnAcercaDe);
+        topPanel.add(aboutButtonPanel, BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
 
@@ -190,58 +232,6 @@ public class PantallaPrincipal extends JFrame {
             }
         } catch (Exception e) {
             System.err.println("No se pudo cargar el icono para: " + text + ". Ruta: " + iconPath + ". Error: " + e.getMessage());
-        }
-        return button;
-    }
-
-    // Método auxiliar para crear un botón de icono redondeado (para Configuración)
-    private JButton createRoundedIconButton(String iconPath) {
-        JButton button = new JButton() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Dibujar el fondo redondeado
-                g2.setColor(new Color(200, 200, 200, 150)); // Un gris semi-transparente para el fondo del icono
-                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 15, 15));
-
-                super.paintComponent(g);
-                g2.dispose();
-            }
-
-            @Override
-            protected void paintBorder(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Dibujar el borde redondeado
-                g2.setColor(Color.GRAY); // Borde gris
-                g2.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 15, 15));
-
-                g2.dispose();
-                // No llamar a super.paintBorder(g)
-            }
-        };
-        button.setPreferredSize(new Dimension(50, 50));
-        button.setOpaque(false);
-        button.setContentAreaFilled(false);
-        button.setBorderPainted(false); // No queremos el borde por defecto de Swing
-
-        try {
-            ImageIcon icon = new ImageIcon(getClass().getResource(iconPath));
-            if (icon.getImageLoadStatus() == java.awt.MediaTracker.ERRORED) {
-                 System.err.println("Error al cargar el icono de configuración: " + iconPath);
-                 button.setText("Conf.");
-                 button.setFont(new Font("Arial", Font.PLAIN, 10));
-            } else {
-                Image scaledImage = icon.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
-                button.setIcon(new ImageIcon(scaledImage));
-            }
-        } catch (Exception e) {
-            System.err.println("No se pudo cargar el icono de configuración. Ruta: " + iconPath + ". Error: " + e.getMessage());
-            button.setText("Conf.");
-            button.setFont(new Font("Arial", Font.PLAIN, 10));
         }
         return button;
     }
