@@ -13,6 +13,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.ImageIcon;
 import javax.swing.BorderFactory;
@@ -116,43 +117,52 @@ public class PantallaPrincipal extends JFrame {
 
         // ---------------------- LOGO YELLOW ----------------------
         try {
-            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/images/yellow_logo.png"));
+            // Intenta cargar el logo
+            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/images/yellow_logo.png")); 
             if (logoIcon.getImageLoadStatus() == java.awt.MediaTracker.ERRORED) {
+                // Si el logo no se carga, muestra el texto "YELLOW"
                 JLabel textLogo = new JLabel("YELLOW");
                 textLogo.setFont(new Font("Ink Free", Font.BOLD, 48));
                 textLogo.setForeground(new Color(255, 200, 0));
                 gbc.gridx = 0;
                 gbc.gridy = 0;
-                gbc.gridwidth = 3;
+                gbc.gridwidth = GridBagConstraints.REMAINDER; // Ocupa todo el ancho restante
                 panel.add(textLogo, gbc);
             } else {
+                // Si el logo se carga, muestra la imagen
                 JLabel logoLabel = new JLabel(logoIcon);
                 gbc.gridx = 0;
                 gbc.gridy = 0;
-                gbc.gridwidth = 3;
+                gbc.gridwidth = GridBagConstraints.REMAINDER; // Ocupa todo el ancho restante
                 panel.add(logoLabel, gbc);
             }
         } catch (Exception e) {
             System.err.println("Error al cargar el logo: " + e.getMessage());
+            // En caso de cualquier otra excepción, muestra el texto "YELLOW"
             JLabel textLogo = new JLabel("YELLOW");
             textLogo.setFont(new Font("Ink Free", Font.BOLD, 48));
             textLogo.setForeground(new Color(255, 200, 0));
             gbc.gridx = 0;
             gbc.gridy = 0;
-            gbc.gridwidth = 3;
+            gbc.gridwidth = GridBagConstraints.REMAINDER; // Ocupa todo el ancho restante
             panel.add(textLogo, gbc);
         }
         // ---------------------------------------------------------
 
         // Resetear gbc para los botones de funcionalidad
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
+        gbc.gridy = 1; // Fila para los primeros botones
+        gbc.gridwidth = 1; // Un solo espacio de grilla
         gbc.fill = GridBagConstraints.NONE;
 
         // Botones de funcionalidad principales, usando el método para botones redondeados
         JButton btnNuevoProyecto = createRoundedStyledButton("Nuevo Proyecto", "/icons/new_project_icon.png");
         JButton btnIngresoIngredientes = createRoundedStyledButton("Ingredientes", "/icons/ingredients_icon.png");
         JButton btnNotas = createRoundedStyledButton("Notas", "/icons/notes_icon.png");
+        
+        // Novedad: Nuevos botones "Papeleria" y "Agenda"
+        JButton btnPapeleria = createRoundedStyledButton("Papeleria", "/icons/papeleria_icon.png"); // TODO: Reemplazar con el icono real
+        JButton btnAgenda = createRoundedStyledButton("Agenda", "/icons/agenda_icon.png"); // TODO: Reemplazar con el icono real
+
 
         // Establecer acciones
         btnNuevoProyecto.addActionListener(e -> {
@@ -172,11 +182,30 @@ public class PantallaPrincipal extends JFrame {
             ventanaNotas.setVisible(true);
             dispose();
         });
+        
+        btnPapeleria.addActionListener(e -> {
+            // AHORA ESTE BOTÓN ABRIRÁ LA VENTANA DE GESTIÓN DE PAPELERÍA
+            GestionPapeleriaScreen gestionPapeleria = new GestionPapeleriaScreen(this, sessionFactory);
+            gestionPapeleria.setVisible(true);
+            this.setVisible(false); // Oculta la pantalla principal al abrir la de papelería
+        });
+
+        btnAgenda.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Funcionalidad de Agenda en desarrollo.", "Próximamente", JOptionPane.INFORMATION_MESSAGE);
+            // Aquí podrías abrir una nueva ventana o panel para la funcionalidad de agenda
+        });
+
 
         // Añadir botones al panel
         gbc.gridx = 0; panel.add(btnNuevoProyecto, gbc);
         gbc.gridx = 1; panel.add(btnIngresoIngredientes, gbc);
         gbc.gridx = 2; panel.add(btnNotas, gbc);
+        
+        // Novedad: Añadir los nuevos botones en una nueva fila o seguir en la misma
+        gbc.gridy = 2; // Mueve a la siguiente fila
+        gbc.gridx = 0; panel.add(btnPapeleria, gbc);
+        gbc.gridx = 1; panel.add(btnAgenda, gbc);
+
 
         add(panel, BorderLayout.CENTER);
     }

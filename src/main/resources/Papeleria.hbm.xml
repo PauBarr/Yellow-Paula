@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.org/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="com.yellow.Papeleria" table="papeleria_productos">
+        <id name="id" column="id_producto">
+            <generator class="identity"/>
+        </id>
+        <property name="nombreProducto" column="nombre_producto" not-null="true"/>
+        <property name="stock" column="stock_disponible"/>
+        <property name="descripcionMedida" column="descripcion_medida"/>
+        <property name="enStock" column="en_stock"/>
+    </class>
+</hibernate-mapping>

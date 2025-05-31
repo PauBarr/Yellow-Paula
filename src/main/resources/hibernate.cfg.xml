@@ -2,25 +2,21 @@
 
 <hibernate-configuration>
     <session-factory>
-        <!-- Configuración de conexión a la base de datos -->
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
         <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
         <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/recetas</property>
         <property name="hibernate.connection.username">root</property>
         <property name="hibernate.connection.password">1234</property>
 
-        <!-- Configuración adicional -->
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.format_sql">true</property>
         <property name="hibernate.hbm2ddl.auto">update</property>
 
      
         
-        <!-- Mapeo usando el archivo XML de recursos -->
         <mapping resource="Ingrediente.hbm.xml"/>
         <mapping resource="Receta.hbm.xml"/>
         <mapping resource="RecetaIngrediente.hbm.xml"/>
         <mapping resource="categoria.hbm.xml"/>
-        
-    </session-factory>
+        <mapping resource="Papeleria.hbm.xml"/> </session-factory>
 </hibernate-configuration>
