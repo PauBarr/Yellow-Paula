@@ -46,7 +46,7 @@ public class GestionPapeleriaScreen extends JFrame {
 
     private void initComponents() {
         setTitle("Gestión de Papelería");
-        setSize(1000, 700);
+        setSize(1000, 750); // Ajustada la altura para asegurar visibilidad del botón de regresar
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
@@ -157,7 +157,8 @@ public class GestionPapeleriaScreen extends JFrame {
         panelInferior.add(panelCampos, BorderLayout.NORTH);
 
         // Panel de botones de acción
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        // Se usa GridLayout para organizar los botones en 2 filas y 3 columnas
+        JPanel panelBotones = new JPanel(new GridLayout(2, 3, 15, 10)); // 2 filas, 3 columnas, con espaciado
         panelBotones.setBackground(new Color(255, 255, 220));
 
         btnAgregar = createStyledButton("AGREGAR", new Color(85, 107, 47)); // Verde
@@ -166,16 +167,16 @@ public class GestionPapeleriaScreen extends JFrame {
         btnLimpiarCampos = createStyledButton("LIMPIAR CAMPOS", Color.GRAY); // Gris
         btnGenerarListaSinStock = createStyledButton("LISTA SIN STOCK", new Color(255, 140, 0)); // Naranja
         
-        // BOTÓN DE REGRESAR: Ahora se crea aquí y se añade directamente al panelBotones
+        // BOTÓN DE REGRESAR
         btnRegresarPrincipal = createStyledButton("REGRESAR", Color.DARK_GRAY); 
-        btnRegresarPrincipal.addActionListener(e -> irAtras()); // Asigna la acción de regresar
+        btnRegresarPrincipal.addActionListener(e -> irAtras()); 
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnActualizar);
         panelBotones.add(btnEliminar);
         panelBotones.add(btnLimpiarCampos);
         panelBotones.add(btnGenerarListaSinStock);
-        panelBotones.add(btnRegresarPrincipal); // ¡Añadimos el botón aquí!
+        panelBotones.add(btnRegresarPrincipal); 
 
         panelInferior.add(panelBotones, BorderLayout.SOUTH);
 
@@ -187,7 +188,6 @@ public class GestionPapeleriaScreen extends JFrame {
         btnEliminar.addActionListener(e -> eliminarProducto());
         btnLimpiarCampos.addActionListener(e -> limpiarCampos());
         btnGenerarListaSinStock.addActionListener(e -> generarListaSinStock());
-        // La acción para btnRegresarPrincipal ya está asignada arriba
     }
 
     private JButton createStyledButton(String text, Color bgColor) {

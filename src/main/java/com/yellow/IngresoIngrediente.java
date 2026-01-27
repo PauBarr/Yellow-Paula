@@ -174,7 +174,7 @@ public class IngresoIngrediente extends JFrame {
         ingresarButton = createRoundedButton("GUARDAR / ACTUALIZAR", new Color(85, 107, 47));
         limpiarButton = createRoundedButton("NUEVO / LIMPIAR", Color.DARK_GRAY);
         verIngredientesButton = createRoundedButton("VER INGREDIENTES", new Color(70, 130, 180));
-        salirButton = createRoundedButton("SALIR", new Color(178, 34, 34));
+        salirButton = createRoundedButton("REGRESAR", new Color(178, 34, 34));
 
         panelInferior.add(ingresarButton);
         panelInferior.add(limpiarButton);

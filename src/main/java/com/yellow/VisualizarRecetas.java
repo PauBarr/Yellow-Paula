@@ -16,6 +16,17 @@ import java.util.ArrayList;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+// Importaciones para PDFBox
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import java.io.File;
+import java.io.IOException;
+import java.util.stream.Collectors;
+
+
 // MODIFICADO: Ahora extiende JPanel
 public class VisualizarRecetas extends JPanel {
 
@@ -26,6 +37,7 @@ public class VisualizarRecetas extends JPanel {
     private JButton actualizarCostosButton;
     private JButton verDetalleButton;
     private JButton atrasButton;
+    private JButton exportarPDFButton; // Nuevo botón para exportar a PDF
 
     private JComboBox<Categoria> filtroCategoriaComboBox;
     private JTextField buscadorTextField;
@@ -118,17 +130,20 @@ public class VisualizarRecetas extends JPanel {
         eliminarButton = new JButton("ELIMINAR RECETA SELECCIONADA");
         actualizarCostosButton = new JButton("ACTUALIZAR COSTOS DE RECETA");
         verDetalleButton = new JButton("VER DETALLE DE RECETA");
+        exportarPDFButton = new JButton("EXPORTAR A PDF"); // Inicialización del nuevo botón
         atrasButton = new JButton("ATRÁS");
 
         buttonPanel.add(eliminarButton);
         buttonPanel.add(actualizarCostosButton);
         buttonPanel.add(verDetalleButton);
+        buttonPanel.add(exportarPDFButton); // Añadir el nuevo botón al panel
         buttonPanel.add(atrasButton);
         add(buttonPanel, BorderLayout.SOUTH);
 
         eliminarButton.addActionListener(e -> eliminarRecetaSeleccionada());
         actualizarCostosButton.addActionListener(e -> actualizarCostoRecetaSeleccionada());
         verDetalleButton.addActionListener(e -> verDetalleReceta());
+        exportarPDFButton.addActionListener(e -> exportarRecetasAPDF()); // Asignar acción al nuevo botón
         // MODIFICADO: Llama al método de la ventana padre para cambiar de panel
         atrasButton.addActionListener(e -> ventanaPadre.mostrarPanel("principal"));
     }
@@ -363,6 +378,159 @@ public class VisualizarRecetas extends JPanel {
             JOptionPane.showMessageDialog(this, "Error al obtener el detalle de la receta: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * Exporta las recetas actualmente visibles en la tabla (después de aplicar filtros) a un archivo PDF.
+     * El PDF incluirá el nombre, descripción, costo total y categorías de cada receta.
+     */
+    private void exportarRecetasAPDF() {
+        if (tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "No hay recetas para exportar.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        PDDocument document = new PDDocument();
+        PDPageContentStream contentStream = null; // Declarar fuera del try-with-resources
+
+        try {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            contentStream = new PDPageContentStream(document, page); // Inicializar aquí
+
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 18);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(50, 750);
+            contentStream.showText("Listado de Recetas - Yellow App");
+            contentStream.endText();
+
+            contentStream.setFont(PDType1Font.HELVETICA, 10);
+            float margin = 50;
+            float yStart = 720;
+            float tableWidth = page.getMediaBox().getWidth() - 2 * margin;
+            float rowHeight = 15;
+            float yPosition = yStart;
+
+            // Headers
+            String[] headers = {"Nombre", "Costo", "Categorías", "Descripción"};
+            // Simplified column widths for PDF
+            float[] colWidths = {0.25f, 0.15f, 0.30f, 0.30f};
+            float xPosition;
+
+            // Draw Headers
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+            xPosition = margin;
+            for (int i = 0; i < headers.length; i++) {
+                contentStream.beginText();
+                contentStream.newLineAtOffset(xPosition, yPosition);
+                contentStream.showText(headers[i]);
+                contentStream.endText();
+                xPosition += tableWidth * colWidths[i];
+            }
+            yPosition -= rowHeight;
+            contentStream.drawLine(margin, yPosition, margin + tableWidth, yPosition);
+            yPosition -= 5; // Small gap after header line
+
+            contentStream.setFont(PDType1Font.HELVETICA, 8);
+
+            // Iterate over visible rows in the JTable
+            for (int i = 0; i < recetasTable.getRowCount(); i++) {
+                int modelRow = recetasTable.convertRowIndexToModel(i); // Get the model row index
+
+                String nombreReceta = (String) tableModel.getValueAt(modelRow, 1);
+                String costoTotal = (String) tableModel.getValueAt(modelRow, 3);
+                String categorias = (String) tableModel.getValueAt(modelRow, 5);
+                String descripcion = (String) tableModel.getValueAt(modelRow, 2);
+
+                if (yPosition < margin + 50) { // Check if new page is needed
+                    contentStream.close(); // Close content stream for current page
+                    page = new PDPage(PDRectangle.A4);
+                    document.addPage(page);
+                    contentStream = new PDPageContentStream(document, page); // Create new content stream
+                    contentStream.setFont(PDType1Font.HELVETICA, 8); // Reset font
+                    yPosition = yStart; // Reset y position for new page
+
+                    // Redraw headers on new page
+                    xPosition = margin;
+                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+                    for (int j = 0; j < headers.length; j++) {
+                        contentStream.beginText();
+                        contentStream.newLineAtOffset(xPosition, yPosition);
+                        contentStream.showText(headers[j]);
+                        contentStream.endText();
+                        xPosition += tableWidth * colWidths[j];
+                    }
+                    yPosition -= rowHeight;
+                    contentStream.drawLine(margin, yPosition, margin + tableWidth, yPosition);
+                    yPosition -= 5; // Small gap after header line
+                    contentStream.setFont(PDType1Font.HELVETICA, 8);
+                }
+
+                xPosition = margin;
+                
+                contentStream.beginText();
+                contentStream.newLineAtOffset(xPosition, yPosition);
+                contentStream.showText(truncateString(nombreReceta, 30));
+                xPosition += tableWidth * colWidths[0];
+
+                contentStream.newLineAtOffset(xPosition - (tableWidth * colWidths[0]), 0); // Reset X and then move
+                contentStream.showText(costoTotal);
+                xPosition += tableWidth * colWidths[1];
+
+                contentStream.newLineAtOffset(xPosition - (tableWidth * colWidths[0] + tableWidth * colWidths[1]), 0); // Reset X and then move
+                contentStream.showText(truncateString(categorias, 35));
+                xPosition += tableWidth * colWidths[2];
+
+                contentStream.newLineAtOffset(xPosition - (tableWidth * colWidths[0] + tableWidth * colWidths[1] + tableWidth * colWidths[2]), 0); // Reset X and then move
+                contentStream.showText(truncateString(descripcion, 35));
+                contentStream.endText();
+                
+                yPosition -= rowHeight; // Move to the next row
+                contentStream.drawLine(margin, yPosition, margin + tableWidth, yPosition); // Line separator
+                yPosition -= 2; // Small gap after line
+
+            }
+
+            contentStream.close(); // Close the last content stream
+
+            // File Chooser for saving the PDF
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Guardar Lista de Recetas");
+            fileChooser.setSelectedFile(new File("listado_recetas.pdf"));
+            int userSelection = fileChooser.showSaveDialog(this);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                if (!fileToSave.getName().toLowerCase().endsWith(".pdf")) {
+                    fileToSave = new File(fileToSave.getAbsolutePath() + ".pdf");
+                }
+                document.save(fileToSave);
+                JOptionPane.showMessageDialog(this, "Lista de recetas guardada en:\n" + fileToSave.getAbsolutePath(), "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(fileToSave);
+                }
+            }
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Error al generar o guardar el PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (document != null) {
+                    document.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    // Helper method to truncate strings for PDF display
+    private String truncateString(String text, int maxLength) {
+        if (text == null) return "";
+        if (text.length() > maxLength) {
+            return text.substring(0, maxLength - 3) + "...";
+        }
+        return text;
     }
 
     // ELIMINADO: irAtras() ya que ahora lo maneja el padre

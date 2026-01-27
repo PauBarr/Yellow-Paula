@@ -1,4 +1,3 @@
-// src/main/java/com/yellow/PantallaPrincipal.java
 package com.yellow;
 
 import java.awt.Color;
@@ -23,6 +22,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D; 
 import javax.swing.AbstractButton;
+import com.yellow.AgendaScreen;
 
 public class PantallaPrincipal extends JFrame {
 
@@ -191,8 +191,9 @@ public class PantallaPrincipal extends JFrame {
         });
 
         btnAgenda.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Funcionalidad de Agenda en desarrollo.", "Próximamente", JOptionPane.INFORMATION_MESSAGE);
-            // Aquí podrías abrir una nueva ventana o panel para la funcionalidad de agenda
+            AgendaScreen agendaScreen = new AgendaScreen(this, sessionFactory);
+            agendaScreen.setVisible(true);
+            this.setVisible(false); // Oculta la pantalla principal
         });
 
 
