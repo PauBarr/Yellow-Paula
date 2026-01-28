@@ -3,23 +3,22 @@
 
 <hibernate-mapping>
     <class name="com.yellow.Receta" table="recetas">
-        <!-- ID de la receta -->
         <id name="id" column="id">
             <generator class="identity"/>
         </id>
 
-        <property name="nombre" column="nombre_receta"/> <property name="descripcion" column="descripcion"/>
+        <property name="nombre" column="nombre_receta"/>
+        <property name="descripcion" column="descripcion"/>
         <property name="costoTotal" column="costo_total"/>
         <property name="fechaCreacion" column="fecha_creacion"/>
         <property name="tiempoPreparacion" column="tiempo_preparacion"/>
+        <property name="gastosExtra" column="gastos_extra"/>
 
-
-        <!-- Relación One-to-Many con la tabla de ingredientes -->
-      <bag name="recetaIngredientes" inverse="true" cascade="all">
-            <key column="id_receta"/> <one-to-many class="com.yellow.RecetaIngrediente"/>
+        <bag name="recetaIngredientes" inverse="true" cascade="all">
+            <key column="id_receta"/>
+            <one-to-many class="com.yellow.RecetaIngrediente"/>
         </bag>
 
-        <!-- Relación Many-to-Many con la tabla de categorías -->
         <bag name="categorias" table="receta_categoria" cascade="all">
             <key column="receta_id"/>
             <many-to-many class="com.yellow.Categoria" column="categoria_id"/>

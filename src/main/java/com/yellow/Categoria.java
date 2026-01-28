@@ -29,4 +29,9 @@ public class Categoria {
 	public void setNombreCategoria(String nombreCategoria) {
 		this.nombreCategoria = nombreCategoria;
 	}
+
+	public String getId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
